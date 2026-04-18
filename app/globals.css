@@ -2,26 +2,348 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Custom Properties ──────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #1A2B5F;
+  --primary-light: #2A3B6F;
+  --primary-dark: #0F1B3F;
+  --accent: #E8622A;
+  --accent-light: #F5733B;
+  --accent-dark: #D04E18;
+  --background: #FAFBFD;
+  --foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --border: #E2E8F0;
+  --radius: 0.75rem;
+  --whatsapp: #25D366;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ─── Base Styles ────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+    color: var(--primary);
+  }
+
+  h1 { @apply text-3xl md:text-4xl lg:text-5xl; }
+  h2 { @apply text-2xl md:text-3xl lg:text-4xl; }
+  h3 { @apply text-xl md:text-2xl; }
+
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  img {
+    @apply max-w-full h-auto;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Component Styles ───────────────────────────────────── */
+@layer components {
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 
+           text-white font-semibold rounded-lg
+           transition-all duration-300 ease-out
+           hover:shadow-lg
+           active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--accent);
+  }
+  .btn-primary:hover {
+    background: var(--accent-light);
+    box-shadow: 0 10px 25px rgba(232, 98, 42, 0.25);
+  }
+
+  /* Secondary / outline button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3
+           font-semibold rounded-lg border-2
+           transition-all duration-300 ease-out
+           hover:text-white active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+  .btn-secondary:hover {
+    background: var(--primary);
+  }
+
+  /* Card */
+  .card {
+    @apply bg-white rounded-xl border shadow-sm hover:shadow-md
+           transition-all duration-300 ease-out;
+    border-color: var(--border);
+  }
+  .card:hover {
+    transform: translateY(-4px);
+  }
+
+  /* Section container */
+  .section {
+    @apply py-16 md:py-20 lg:py-24;
+  }
+
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border
+           bg-white
+           focus:outline-none focus:ring-2
+           transition-all duration-200;
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+  .input-field::placeholder {
+    color: var(--muted-foreground);
+  }
+  .input-field:focus {
+    border-color: var(--accent);
+    --tw-ring-color: rgba(232, 98, 42, 0.3);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply animate-pulse bg-gray-200 rounded-lg;
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* ─── Animations ─────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* ─── WhatsApp Float ─────────────────────────────────────── */
+.whatsapp-float {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--whatsapp);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(37, 211, 102, 0.5);
+}
+
+.whatsapp-float::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--whatsapp);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* ─── Admin sidebar ──────────────────────────────────────── */
+.admin-sidebar {
+  @apply fixed inset-y-0 left-0 z-50 w-64 bg-[var(--primary)] text-white
+         transform transition-transform duration-300 ease-in-out;
+}
+
+.admin-sidebar.open {
+  @apply translate-x-0;
+}
+
+@media (max-width: 1023px) {
+  .admin-sidebar {
+    @apply -translate-x-full;
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-sidebar {
+    @apply translate-x-0;
+  }
+}
+
+/* ─── Animations / Keyframes ────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(232,98,42,0.2); }
+  50% { box-shadow: 0 0 20px rgba(232,98,42,0.4); }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
+.animate-fadeInLeft { animation: fadeInLeft 0.6s ease-out forwards; }
+.animate-scaleIn { animation: scaleIn 0.5s ease-out forwards; }
+.animate-glow { animation: glow 2s ease-in-out infinite; }
+
+/* Staggered animation delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* ─── Enhanced prose for legal pages ────────────────────── */
+.prose-eduwave h2 {
+  @apply text-xl md:text-2xl font-bold mt-10 mb-4;
+  color: var(--primary);
+}
+
+.prose-eduwave h3 {
+  @apply text-lg font-semibold mt-6 mb-3;
+  color: var(--primary);
+}
+
+.prose-eduwave p {
+  @apply text-gray-600 leading-relaxed mb-4;
+}
+
+.prose-eduwave ul {
+  @apply list-disc list-inside space-y-2 mb-6 text-gray-600 pl-2;
+}
+
+.prose-eduwave li {
+  @apply text-gray-700 leading-relaxed;
+}
+
+.prose-eduwave a {
+  color: var(--accent);
+  @apply underline hover:no-underline font-medium;
+}
+
+.prose-eduwave strong {
+  color: var(--primary);
 }

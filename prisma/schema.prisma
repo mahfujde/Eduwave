@@ -1,0 +1,344 @@
+// Prisma schema for Eduwave Educational Consultancy
+// Database: MySQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── User (All Roles) ────────────────────────────────────────
+// Roles: SUPER_ADMIN | ADMIN | EDITOR | AGENT | STUDENT
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String   @default("")
+  role        String   @default("STUDENT") // SUPER_ADMIN, ADMIN, EDITOR, AGENT, STUDENT
+  avatar      String?
+  phone       String?
+  isApproved  Boolean  @default(false) @map("is_approved")
+  isActive    Boolean  @default(true)  @map("is_active")
+  agentCode   String?  @unique @map("agent_code")
+  referredBy  String?  @map("referred_by") // agent code used at registration
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  studentProfile   StudentProfile?
+  applications     Application[]          @relation("StudentApplications")
+  agentApplications Application[]         @relation("AgentApplications")
+  sentMessages     ApplicationMessage[]
+  agentApplication AgentApplication?
+
+  @@map("users")
+}
+
+// ─── Student Profile ─────────────────────────────────────────
+model StudentProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique @map("user_id")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth      String?  @map("date_of_birth")
+  nationality      String?  @default("Bangladeshi")
+  passportNo       String?  @map("passport_no")
+  passportExpiry   String?  @map("passport_expiry")
+  address          String?  @db.Text
+  emergencyContact String?  @map("emergency_contact")
+  lastQualification String? @map("last_qualification")
+  lastInstitution  String?  @map("last_institution")
+  gpa              String?
+  englishScore     String?  @map("english_score")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("student_profiles")
+}
+
+// ─── Application ─────────────────────────────────────────────
+// Status flow: submitted → under_review → documents_required → 
+//              offer_received → visa_processing → enrolled | rejected | withdrawn
+model Application {
+  id             String   @id @default(cuid())
+  trackingNumber String   @unique @map("tracking_number") // EDU-2025-00042
+  studentId      String   @map("student_id")
+  student        User     @relation("StudentApplications", fields: [studentId], references: [id])
+  universityId   String?  @map("university_id")
+  university     University? @relation(fields: [universityId], references: [id])
+  programId      String?  @map("program_id")
+  program        Program? @relation(fields: [programId], references: [id])
+  universityName String?  @map("university_name")
+  programName    String?  @map("program_name")
+  intake         String?
+  status         String   @default("submitted")
+  agentCode      String?  @map("agent_code")
+  agentId        String?  @map("agent_id")
+  agent          User?    @relation("AgentApplications", fields: [agentId], references: [id])
+  adminNotes     String?  @map("admin_notes") @db.LongText
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  messages  ApplicationMessage[]
+  documents ApplicationDocument[]
+
+  @@map("applications")
+}
+
+// ─── Application Messages ────────────────────────────────────
+model ApplicationMessage {
+  id            String      @id @default(cuid())
+  applicationId String      @map("application_id")
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  senderId      String      @map("sender_id")
+  sender        User        @relation(fields: [senderId], references: [id])
+  senderRole    String      @map("sender_role") // STUDENT | ADMIN
+  message       String      @db.LongText
+  isRead        Boolean     @default(false) @map("is_read")
+  createdAt     DateTime    @default(now())
+
+  @@map("application_messages")
+}
+
+// ─── Application Documents ───────────────────────────────────
+model ApplicationDocument {
+  id            String      @id @default(cuid())
+  applicationId String      @map("application_id")
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  name          String
+  url           String
+  type          String      @default("general") // passport | transcript | offer_letter | visa | other
+  uploadedBy    String      @map("uploaded_by") // student | admin
+  createdAt     DateTime    @default(now())
+
+  @@map("application_documents")
+}
+
+// ─── Agent Application ───────────────────────────────────────
+model AgentApplication {
+  id          String   @id @default(cuid())
+  userId      String?  @unique @map("user_id")
+  user        User?    @relation(fields: [userId], references: [id])
+  name        String
+  email       String
+  phone       String?
+  company     String?
+  experience  String?  @db.Text
+  region      String?
+  motivation  String?  @db.Text
+  status      String   @default("pending") // pending | approved | rejected
+  reviewNotes String?  @map("review_notes") @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("agent_applications")
+}
+
+// ─── Notification (Bars, Popups, Banners) ───────────────────
+model Notification {
+  id           String    @id @default(cuid())
+  title        String
+  content      String    @db.LongText
+  type         String    @default("info")  // info | success | warning | danger
+  style        String    @default("bar")   // bar | popup | banner
+  position     String?   @default("top")   // top | bottom (for bars)
+  isActive     Boolean   @default(true)    @map("is_active")
+  targetPages  String?   @map("target_pages") @db.Text // JSON array ["*"] or ["/","/about"]
+  startDate    DateTime? @map("start_date")
+  endDate      DateTime? @map("end_date")
+  delay        Int?      @default(0)       // seconds delay (for popups)
+  videoUrl     String?   @map("video_url")
+  linkText     String?   @map("link_text")
+  linkUrl      String?   @map("link_url")
+  isDismissible Boolean  @default(true)   @map("is_dismissible")
+  sortOrder    Int       @default(0)       @map("sort_order")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("notifications")
+}
+
+// ─── CMS Page ────────────────────────────────────────────────
+model Page {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  excerpt   String?  @db.Text
+  sections  String?  @db.LongText // JSON array of section objects
+  status    String   @default("draft") // draft | published
+  isSystem  Boolean  @default(false) @map("is_system") // protected system pages
+  metaTitle String?  @map("meta_title")
+  metaDesc  String?  @map("meta_desc") @db.Text
+  ogImage   String?  @map("og_image")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pages")
+}
+
+// ─── Media Library ───────────────────────────────────────────
+model MediaFile {
+  id         String   @id @default(cuid())
+  name       String
+  url        String
+  type       String   @default("image") // image | document | video
+  size       Int?     // bytes
+  mimeType   String?  @map("mime_type")
+  folder     String?  @default("general")
+  uploadedBy String?  @map("uploaded_by")
+  createdAt  DateTime @default(now())
+
+  @@map("media_files")
+}
+
+// ─── University ─────────────────────────────────────────────
+model University {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  shortName   String?   @map("short_name")
+  description String?   @db.LongText
+  country     String    @default("Malaysia")
+  city        String?
+  address     String?   @db.Text
+  website     String?
+  email       String?
+  phone       String?
+  logo        String?
+  banner      String?
+  ranking     String?
+  established String?
+  type        String?   @default("Private")
+  offerLetter Boolean   @default(true)  @map("offer_letter")
+  featured    Boolean   @default(false)
+  isPublic    Boolean   @default(true)  @map("is_public")
+  sortOrder   Int       @default(0)     @map("sort_order")
+  metaTitle   String?   @map("meta_title")
+  metaDesc    String?   @map("meta_desc") @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  programs     Program[]
+  applications Application[]
+
+  @@map("universities")
+}
+
+// ─── Program / Course ───────────────────────────────────────
+model Program {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  universityId    String   @map("university_id")
+  university      University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  level           String   @default("Bachelor")
+  duration        String?
+  language        String?  @default("English")
+  intake          String?
+  mode            String?  @default("Full-time")
+  description     String?  @db.LongText
+  overview        String?  @db.LongText
+  curriculum      String?  @db.LongText
+  requirements    String?  @db.LongText
+  careerProspects String?  @db.LongText @map("career_prospects")
+  fees            String?  @db.LongText
+  scholarships    String?  @db.LongText
+  englishReq      String?  @map("english_req")
+  classType       String?  @map("class_type")
+  qualification   String?
+  featured        Boolean  @default(false)
+  isPublic        Boolean  @default(true)  @map("is_public")
+  sortOrder       Int      @default(0)     @map("sort_order")
+  metaTitle       String?  @map("meta_title")
+  metaDesc        String?  @map("meta_desc") @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  applications Application[]
+
+  @@map("programs")
+}
+
+// ─── Inquiry / Contact Form ─────────────────────────────────
+model Inquiry {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  whatsapp   String?
+  university String?
+  program    String?
+  message    String?  @db.Text
+  status     String   @default("new")
+  notes      String?  @db.LongText
+  source     String?  @default("website")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("inquiries")
+}
+
+// ─── Testimonial ────────────────────────────────────────────
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  photo     String?
+  university String?
+  program   String?
+  country   String?  @default("Bangladesh")
+  quote     String   @db.Text
+  rating    Int      @default(5)
+  featured  Boolean  @default(true)
+  isPublic  Boolean  @default(true) @map("is_public")
+  sortOrder Int      @default(0)    @map("sort_order")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+// ─── Blog Post ──────────────────────────────────────────────
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String?   @db.Text
+  content     String?   @db.LongText
+  coverImage  String?   @map("cover_image")
+  tags        String?
+  author      String?   @default("Eduwave Team")
+  isPublished Boolean   @default(false) @map("is_published")
+  publishedAt DateTime? @map("published_at")
+  metaTitle   String?   @map("meta_title")
+  metaDesc    String?   @map("meta_desc") @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("blog_posts")
+}
+
+// ─── Site Config ─────────────────────────────────────────────
+model SiteConfig {
+  id    String  @id @default(cuid())
+  key   String  @unique
+  value String  @db.LongText
+  group String  @default("general")
+  label String?
+
+  @@map("site_config")
+}
+
+// ─── Password Reset Tokens ──────────────────────────────────
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("password_reset_tokens")
+}

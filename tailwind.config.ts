@@ -9,11 +9,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "#1A2B5F",
+          light: "#2A3B6F",
+          dark: "#0F1B3F",
+        },
+        accent: {
+          DEFAULT: "#E8622A",
+          light: "#F5733B",
+          dark: "#D04E18",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
       },
     },
   },
   plugins: [],
 };
+
 export default config;
