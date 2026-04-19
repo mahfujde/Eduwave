@@ -80,10 +80,13 @@ export async function PUT(req: NextRequest) {
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, message: "ID required" }, { status: 400 });
 
-    const body = await req.json();
+    const raw = await req.json();
+    // Strip read-only / non-updatable fields
+    const { id: _id, createdAt, updatedAt, _count, university, applications, ...body } = raw;
     // Stringify JSON fields if they're objects
     if (body.fees && typeof body.fees !== "string") body.fees = JSON.stringify(body.fees);
     if (body.curriculum && typeof body.curriculum !== "string") body.curriculum = JSON.stringify(body.curriculum);
+    if (body.careerProspects && typeof body.careerProspects !== "string") body.careerProspects = JSON.stringify(body.careerProspects);
 
     const program = await prisma.program.update({ where: { id }, data: body });
     return NextResponse.json({ success: true, data: program });

@@ -27,7 +27,7 @@ const NAV_GROUPS = [
   },
   {
     label: "Student & Agent Portals",
-    items: ["/admin/applications", "/admin/users", "/admin/agents", "/admin/inquiries"],
+    items: ["/admin/applications", "/admin/users", "/admin/students", "/admin/agents", "/admin/inquiries"],
   },
   {
     label: "Content",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { sendEmail, buildInquiryEmail } from "@/lib/nodemailer";
+import { sendEmail, buildInquiryEmail, buildInquiryAutoReply } from "@/lib/nodemailer";
 
 // POST /api/public/inquiries — submit a new inquiry
 export async function POST(req: NextRequest) {
@@ -29,16 +29,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send notification email to admin (non-blocking)
+    // 1) Send notification email to admin (non-blocking)
     const adminEmail = await prisma.siteConfig.findUnique({ where: { key: "contact_email" } });
     if (adminEmail?.value) {
       sendEmail({
         to: adminEmail.value,
-        subject: `New Inquiry from ${name}`,
+        subject: `📩 New Inquiry from ${name}`,
         html: buildInquiryEmail({ name, email, phone, university, program, message }),
         replyTo: email,
-      }).catch((err) => console.error("Email notification failed:", err));
+      }).catch((err) => console.error("Admin notification email failed:", err));
     }
+
+    // 2) Send auto-reply to the student (non-blocking)
+    sendEmail({
+      to: email,
+      subject: "Thank you for contacting Eduwave! We'll get back to you soon 🎓",
+      html: buildInquiryAutoReply({ name, university, program }),
+    }).catch((err) => console.error("Auto-reply email failed:", err));
 
     return NextResponse.json({ success: true, data: inquiry }, { status: 201 });
   } catch (error) {

@@ -68,7 +68,9 @@ export async function PUT(req: NextRequest) {
     if (!id) return NextResponse.json({ success: false, message: "ID required" }, { status: 400 });
 
     const body = await req.json();
-    const university = await prisma.university.update({ where: { id }, data: body });
+    // Strip read-only / non-updatable fields
+    const { id: _id, createdAt, updatedAt, _count, programs, applications, ...data } = body;
+    const university = await prisma.university.update({ where: { id }, data });
 
     return NextResponse.json({ success: true, data: university });
   } catch (error) {

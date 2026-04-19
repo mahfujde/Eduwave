@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendEmail, buildWelcomeEmail } from "@/lib/nodemailer";
 
 export async function POST(req: Request) {
   try {
@@ -42,6 +43,14 @@ export async function POST(req: Request) {
 
     // Create empty student profile
     await prisma.studentProfile.create({ data: { userId: user.id } });
+
+    // Send welcome email (non-blocking)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://theeduwave.com";
+    sendEmail({
+      to: email,
+      subject: "Welcome to Eduwave! 🎉 Your account is ready",
+      html: buildWelcomeEmail(name, `${siteUrl}/login`),
+    }).catch((err) => console.error("Welcome email failed:", err));
 
     return NextResponse.json({ success: true, message: "Account created successfully! Please log in." }, { status: 201 });
   } catch (error) {

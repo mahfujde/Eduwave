@@ -15,8 +15,10 @@ export const PERMISSIONS = {
   // User management
   MANAGE_USERS:       ["SUPER_ADMIN"],
   VIEW_USERS:         ["SUPER_ADMIN", "ADMIN"],
+  VIEW_STUDENTS:      ["SUPER_ADMIN", "ADMIN", "EDITOR"],
   CREATE_ADMIN:       ["SUPER_ADMIN"],
   APPROVE_AGENTS:     ["SUPER_ADMIN", "ADMIN"],
+  MANAGE_AGENTS:      ["SUPER_ADMIN", "ADMIN"],
 
   // Applications
   VIEW_ALL_APPS:      ["SUPER_ADMIN", "ADMIN", "EDITOR"],
@@ -100,6 +102,7 @@ export function getAdminNavForRole(role: string) {
     { href: "/admin/dashboard",      label: "Dashboard",      icon: "LayoutDashboard", roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/applications",   label: "Applications",   icon: "FileText",        roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/users",          label: "Users",          icon: "Users",           roles: ["SUPER_ADMIN","ADMIN"] },
+    { href: "/admin/students",       label: "Students",       icon: "GraduationCap",   roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/agents",         label: "Agents",         icon: "Handshake",       roles: ["SUPER_ADMIN","ADMIN"] },
     { href: "/admin/universities",   label: "Universities",   icon: "Building2",       roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/programs",       label: "Programs",       icon: "GraduationCap",   roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
@@ -112,7 +115,7 @@ export function getAdminNavForRole(role: string) {
     { href: "/admin/seo",            label: "SEO",            icon: "Search",          roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/header-footer",  label: "Header & Footer", icon: "Globe",           roles: ["SUPER_ADMIN","ADMIN"] },
     { href: "/admin/theme",          label: "Theme & Colors",  icon: "Palette",         roles: ["SUPER_ADMIN","ADMIN"] },
-    { href: "/admin/settings",       label: "Settings",       icon: "Settings",        roles: ["SUPER_ADMIN","ADMIN"] },
+    { href: "/admin/settings",       label: "Settings",       icon: "Settings",        roles: ["SUPER_ADMIN"] },
   ];
   return all.filter((item) => item.roles.includes(role));
 }

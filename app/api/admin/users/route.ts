@@ -4,14 +4,20 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 import bcrypt from "bcryptjs";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session || !isAdmin((session.user as any).role)) return NextResponse.json({ success: false }, { status: 401 });
 
+    const { searchParams } = new URL(req.url);
+    const roleFilter = searchParams.get("role");
+    const where: any = {};
+    if (roleFilter) where.role = roleFilter;
+
     const users = await prisma.user.findMany({
+      where,
       orderBy: { createdAt: "desc" },
-      select: { id: true, name: true, email: true, role: true, isApproved: true, isActive: true, agentCode: true, createdAt: true, phone: true },
+      select: { id: true, name: true, email: true, role: true, isApproved: true, isActive: true, agentCode: true, referredBy: true, createdAt: true, phone: true },
     });
     return NextResponse.json({ success: true, data: users });
   } catch (error) {
