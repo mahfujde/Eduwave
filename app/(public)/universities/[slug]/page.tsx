@@ -8,10 +8,10 @@ import { useUniversity } from "@/hooks/useData";
 import {
   MapPin, Globe, Phone, Mail, Calendar, Building2, Award,
   FileCheck, ArrowLeft, Loader2, ExternalLink, ChevronDown,
-  ChevronUp, BookOpen, GraduationCap,
+  ChevronUp, BookOpen, GraduationCap, Play,
 } from "lucide-react";
 
-type Tab = "overview" | "courses";
+type Tab = "overview" | "courses" | "campus-tour";
 
 const DEPARTMENT_GROUPS: Record<string, string[]> = {
   "Computer Science & IT": ["Bachelor", "Diploma", "Master", "Foundation"],
@@ -28,7 +28,7 @@ function DepartmentAccordion({ title, programs }: { title: string; programs: any
   const [open, setOpen] = useState(false);
   if (programs.length === 0) return null;
   return (
-    <div className="border border-[var(--border)] rounded-xl overflow-hidden">
+    <div className="border border-[var(--border)] rounded-xl overflow-hidden anim-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-gray-50 transition-colors text-left"
@@ -62,6 +62,11 @@ function DepartmentAccordion({ title, programs }: { title: string; programs: any
       )}
     </div>
   );
+}
+
+function getYouTubeId(url: string): string | null {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
 }
 
 export default function UniversityDetailPage() {
@@ -111,6 +116,14 @@ export default function UniversityDetailPage() {
     if (uncategorized.length > 0) programsByDept["Other Programs"] = uncategorized;
   }
 
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "overview", label: "Overview" },
+    { key: "courses", label: "Courses" },
+    ...(university.campusTourVideo ? [{ key: "campus-tour" as Tab, label: "Campus Tour" }] : []),
+  ];
+
+  const videoId = university.campusTourVideo ? getYouTubeId(university.campusTourVideo) : null;
+
   return (
     <div>
       {/* Hero */}
@@ -123,7 +136,7 @@ export default function UniversityDetailPage() {
             <ArrowLeft size={15} /> Back to Universities
           </Link>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 anim-slide-left anim-show">
             {/* Logo */}
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white shadow-lg flex items-center justify-center shrink-0 overflow-hidden p-2">
               {university.logo ? (
@@ -161,18 +174,19 @@ export default function UniversityDetailPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mt-8 bg-white/10 rounded-xl p-1 w-fit">
-            {(["overview", "courses"] as Tab[]).map((tab) => (
+          <div className="flex gap-1 mt-8 bg-white/10 rounded-xl p-1 w-fit overflow-x-auto">
+            {tabs.map((tab) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2 rounded-lg text-sm font-semibold capitalize transition-all duration-200 ${
-                  activeTab === tab
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold capitalize transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === tab.key
                     ? "bg-white text-[var(--primary)] shadow"
                     : "text-white/80 hover:text-white hover:bg-white/10"
                 }`}
               >
-                {tab}
+                {tab.key === "campus-tour" && <Play size={13} />}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -186,9 +200,22 @@ export default function UniversityDetailPage() {
           <div className="lg:col-span-2 space-y-8">
             {activeTab === "overview" && (
               <>
-                {/* About */}
+                {/* Banner / Images FIRST */}
+                {university.banner && (
+                  <div className="rounded-2xl overflow-hidden border border-[var(--border)] shadow-sm anim-zoom">
+                    <Image
+                      src={university.banner}
+                      alt={`${university.name} campus`}
+                      width={800}
+                      height={450}
+                      className="w-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* About - AFTER images */}
                 {university.description && (
-                  <div>
+                  <div className="anim-hidden">
                     <h2 className="text-xl font-bold text-[var(--primary)] mb-4">
                       About the University
                     </h2>
@@ -199,25 +226,12 @@ export default function UniversityDetailPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Banner / Scholarship image */}
-                {university.banner && (
-                  <div className="rounded-2xl overflow-hidden border border-[var(--border)] shadow-sm">
-                    <Image
-                      src={university.banner}
-                      alt={`${university.name} scholarship`}
-                      width={800}
-                      height={450}
-                      className="w-full object-cover"
-                    />
-                  </div>
-                )}
               </>
             )}
 
             {activeTab === "courses" && (
               <>
-                <div>
+                <div className="anim-hidden">
                   <h2 className="text-xl font-bold text-[var(--primary)] mb-2">
                     Departments and Courses
                   </h2>
@@ -241,12 +255,42 @@ export default function UniversityDetailPage() {
                 </div>
               </>
             )}
+
+            {activeTab === "campus-tour" && (
+              <div className="anim-zoom">
+                <h2 className="text-xl font-bold text-[var(--primary)] mb-4 flex items-center gap-2">
+                  <Play size={20} className="text-[var(--accent)]" />
+                  Campus Tour
+                </h2>
+                {videoId ? (
+                  <div className="rounded-2xl overflow-hidden border border-[var(--border)] shadow-lg bg-black">
+                    <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                      <iframe
+                        src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                        title={`${university.name} Campus Tour`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <Play size={40} className="mx-auto mb-3 text-gray-300" />
+                    <p className="text-gray-500 text-sm">Campus tour video will be available soon.</p>
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 mt-4 text-center">
+                  Take a virtual tour of {university.shortName || university.name}&apos;s campus facilities and surroundings.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
           <aside className="space-y-5">
             {/* Quick Info */}
-            <div className="card p-5 space-y-4">
+            <div className="card p-5 space-y-4 anim-slide-right">
               <h3 className="text-base font-bold text-[var(--primary)] border-b border-[var(--border)] pb-3">
                 Quick Info
               </h3>
@@ -301,7 +345,7 @@ export default function UniversityDetailPage() {
 
             {/* Contact */}
             {(university.website || university.email || university.phone) && (
-              <div className="card p-5 space-y-3">
+              <div className="card p-5 space-y-3 anim-slide-right">
                 <h3 className="text-base font-bold text-[var(--primary)] border-b border-[var(--border)] pb-3">
                   Contact
                 </h3>
@@ -335,7 +379,7 @@ export default function UniversityDetailPage() {
             )}
 
             {/* CTA */}
-            <div className="rounded-2xl p-6 bg-gradient-to-br from-[var(--accent)] to-[var(--accent-dark)] text-white text-center shadow-lg">
+            <div className="rounded-2xl p-6 bg-gradient-to-br from-[var(--accent)] to-[var(--accent-dark)] text-white text-center shadow-lg anim-zoom">
               <GraduationCap size={32} className="mx-auto mb-3 opacity-90" />
               <h3 className="text-lg font-bold mb-1">Interested?</h3>
               <p className="text-sm text-white/80 mb-4">

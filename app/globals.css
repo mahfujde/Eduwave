@@ -347,3 +347,112 @@
 .prose-eduwave strong {
   color: var(--primary);
 }
+
+/* ─── Text Justification ────────────────────────────────── */
+.prose-eduwave p,
+.section p,
+.card p {
+  text-align: justify;
+}
+
+/* ─── Scroll-Triggered Animations ────────────────────────── */
+.anim-hidden {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-hidden.anim-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.anim-slide-left {
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-slide-left.anim-show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.anim-slide-right {
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-slide-right.anim-show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.anim-zoom {
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-zoom.anim-show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger children */
+.anim-stagger > * { transition-delay: calc(var(--i, 0) * 100ms); }
+
+/* ─── Logo Carousel Infinite Scroll ──────────────────────── */
+@keyframes scrollLogos {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.logo-carousel-track {
+  display: flex;
+  animation: scrollLogos 30s linear infinite;
+  width: max-content;
+}
+.logo-carousel-track:hover {
+  animation-play-state: paused;
+}
+
+/* ─── Testimonial Carousel ───────────────────────────────── */
+.testimonial-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 1.5rem;
+}
+.testimonial-carousel::-webkit-scrollbar { display: none; }
+.testimonial-carousel > * {
+  scroll-snap-align: start;
+  flex: 0 0 calc(25% - 1.125rem);
+  min-width: 280px;
+}
+
+/* ─── Mobile Spacing Fix ─────────────────────────────────── */
+@media (max-width: 767px) {
+  main.min-h-screen {
+    padding-top: 4rem !important;
+  }
+  .section {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  .testimonial-carousel > * {
+    flex: 0 0 85%;
+  }
+}
+
+/* ─── Copy Button Toast ──────────────────────────────────── */
+@keyframes toastSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.copy-toast {
+  animation: toastSlideUp 0.3s ease-out forwards;
+}

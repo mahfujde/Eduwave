@@ -211,6 +211,7 @@ model University {
   ranking     String?
   established String?
   type        String?   @default("Private")
+  campusTourVideo String? @map("campus_tour_video") @db.Text
   offerLetter Boolean   @default(true)  @map("offer_letter")
   featured    Boolean   @default(false)
   isPublic    Boolean   @default(true)  @map("is_public")

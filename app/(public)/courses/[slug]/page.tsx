@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,7 +10,7 @@ import type { FeeRow } from "@/types";
 import {
   ArrowLeft, Loader2, MapPin, Clock, Calendar, Globe,
   GraduationCap, BookOpen, CheckCircle2, Briefcase,
-  Building2, DollarSign, FileText,
+  Building2, DollarSign, FileText, Copy, Check,
 } from "lucide-react";
 
 interface CurriculumCategory { category: string; subjects: string[]; }
@@ -33,6 +34,7 @@ function getCareerIcon(label: string): string {
 export default function CourseDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: program, isLoading } = useProgram(slug);
+  const [copied, setCopied] = useState(false);
 
   if (isLoading) {
     return (
@@ -357,6 +359,41 @@ export default function CourseDetailPage() {
                 style={{ background: "var(--accent)" }}>
                 Start Application →
               </Link>
+              <button
+                onClick={() => {
+                  const fees: FeeRow[] = safeJsonParse(program.fees, []);
+                  const tuition = fees.filter((f: any) => f.type !== 'other');
+                  const other = fees.filter((f: any) => f.type === 'other');
+                  const url = `https://theeduwave.com/courses/${program.slug}`;
+                  let text = `🏛️ ${program.university?.name || 'University'}\n🎓 ${program.name}\n\n`;
+                  if (program.qualification || program.level) text += `🎓 Qualification: ${program.qualification || program.level}\n`;
+                  if (program.englishReq) text += `💬 English requirement: ${program.englishReq}\n`;
+                  if (program.duration) text += `⏳ Duration: ${program.duration}\n`;
+                  text += '\n';
+                  if (program.intake) text += `📅 Intake: ${program.intake}\n`;
+                  if (program.classType || program.mode) text += `📚 Class Type: ${program.classType || program.mode}\n`;
+                  if (tuition.length > 0) {
+                    text += '\n💸 Tuition Fees:\n';
+                    tuition.forEach((f: any) => { text += `- ${f.label}: ${f.amount}\n`; });
+                  }
+                  if (other.length > 0) {
+                    text += '\n💰 Other Fees:\n';
+                    other.forEach((f: any) => { text += `- ${f.label}: ${f.amount}\n`; });
+                  }
+                  text += `\n🔗 More details visit the link below:\n${url}`;
+                  navigator.clipboard.writeText(text).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 3000);
+                  });
+                }}
+                className={`flex items-center justify-center gap-2 w-full py-3 mt-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${
+                  copied
+                    ? 'bg-green-500 text-white'
+                    : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                }`}
+              >
+                {copied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy Details</>}
+              </button>
               <p className="text-xs text-white/40 mt-3">Free consultation available</p>
             </div>
 

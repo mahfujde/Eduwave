@@ -4,6 +4,7 @@ import WhatsAppFloat from "@/components/WhatsAppFloat";
 import NotificationBar from "@/components/NotificationBar";
 import NotificationPopup from "@/components/NotificationPopup";
 import ThemeLoader from "@/components/ThemeLoader";
+import ScrollAnimator from "@/components/ScrollAnimator";
 
 export default function PublicLayout({
   children,
@@ -15,10 +16,11 @@ export default function PublicLayout({
       <ThemeLoader />
       <NotificationBar />
       <Navbar />
-      <main className="min-h-screen pt-24 md:pt-28">{children}</main>
+      <main className="min-h-screen pt-16 md:pt-24">{children}</main>
       <Footer />
       <WhatsAppFloat />
       <NotificationPopup />
+      <ScrollAnimator />
     </>
   );
 }

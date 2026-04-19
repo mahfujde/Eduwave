@@ -26,7 +26,7 @@ export default function AdminUniversitiesPage() {
     reset({
       name: "", slug: "", shortName: "", description: "", country: "Malaysia", city: "",
       website: "", logo: "", banner: "", ranking: "", established: "", type: "Private",
-      offerLetter: true, featured: false, isPublic: true,
+      campusTourVideo: "", offerLetter: true, featured: false, isPublic: true,
     });
     setShowForm(true);
   };
@@ -145,6 +145,12 @@ export default function AdminUniversitiesPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea {...register("description")} rows={4} className="input-field resize-none" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">🎬 Campus Tour Video (YouTube URL)</label>
+                <input {...register("campusTourVideo")} className="input-field" placeholder="https://www.youtube.com/watch?v=..." />
+                <p className="text-xs text-gray-400 mt-1">Paste a YouTube video link. Will appear as a "Campus Tour" tab on the university page.</p>
               </div>
 
               {/* Logo upload */}

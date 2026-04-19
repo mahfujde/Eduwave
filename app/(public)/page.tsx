@@ -64,6 +64,32 @@ const serviceIcons: Record<string, any> = {
   Award, Stethoscope, BookOpen, Globe, Headphones, Users,
 };
 
+function TestimonialsExpander({ testimonials }: { testimonials: any[] }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="mt-8">
+      {!expanded ? (
+        <div className="text-center">
+          <button
+            onClick={() => setExpanded(true)}
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white border-2 border-white/20 hover:bg-white/10 transition-all active:scale-95"
+          >
+            See More Reviews ({testimonials.length}+) <ChevronRight size={16} />
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+          {testimonials.map((t: any) => (
+            <div key={t.id} className="anim-hidden">
+              <TestimonialCard testimonial={t} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const fallbackTestimonials = [
   { id: "t1", name: "Tanvir Ahamed", photo: "/images/testimonials/TANVIR AHAMED.webp", university: "Asia Pacific University (APU)", program: "Master of Science in Cyber Security", quote: "I always wanted to pursue Cyber Security at a top university in Malaysia. Eduwave helped me choose APU and guided me through every step of the application and visa process. Their support was professional and genuine. I am now living my dream in Malaysia, and Eduwave made it possible.", rating: 5 },
   { id: "t2", name: "Sadia Afrin", photo: "/images/testimonials/Sadia Afrin.webp", university: "Asia Pacific University (APU)", program: "Master of Business Administration (MBA)", quote: "Eduwave gave me honest and accurate information about APU from the very beginning. The process was smooth and stress-free. I am grateful for their consistent support throughout my admission and visa journey. I confidently recommend Eduwave to anyone planning to study in Malaysia.", rating: 5 },
@@ -273,6 +299,50 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ═══ TOP PARTNERED UNIVERSITIES CAROUSEL ═══ */}
+      {universities && universities.length > 0 && (
+        <section className="section bg-white overflow-hidden">
+          <div className="container-custom">
+            <div className="text-center mb-10 anim-hidden">
+              <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-sm font-semibold mb-4">
+                Trusted Partners
+              </span>
+              <h2 className="text-[var(--primary)]">Top Partnered Universities</h2>
+              <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">
+                We have direct partnerships with Malaysia&apos;s finest universities, ensuring seamless admission for our students.
+              </p>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10" />
+            <div className="logo-carousel-track">
+              {[...universities, ...universities].map((uni: any, i: number) => (
+                <Link
+                  key={`${uni.id}-${i}`}
+                  href={`/universities/${uni.slug}`}
+                  className="flex items-center justify-center mx-6 shrink-0 w-32 h-20 rounded-xl bg-gray-50 border border-gray-100 hover:shadow-lg hover:border-[var(--accent)]/30 transition-all duration-300 p-3 group"
+                >
+                  {uni.logo ? (
+                    <Image
+                      src={uni.logo}
+                      alt={uni.name}
+                      width={100}
+                      height={60}
+                      className="object-contain w-full h-full opacity-70 group-hover:opacity-100 transition-opacity"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold text-gray-400 text-center leading-tight group-hover:text-[var(--primary)]">
+                      {uni.shortName || uni.name}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ═══ INTRO SECTION ═══ */}
       <section ref={introAnim.ref} className="section bg-white">
         <div className="container-custom">
@@ -406,7 +476,7 @@ export default function HomePage() {
         style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 100%)" }}
       >
         <div className="container-custom">
-          <div className={`text-center mb-12 transition-all duration-700 ${testimonialsAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className="text-center mb-12 anim-hidden">
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-[var(--accent)] text-sm font-semibold mb-4">
               Student Stories
             </span>
@@ -416,23 +486,22 @@ export default function HomePage() {
             </p>
           </div>
 
-          {displayTestimonials.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayTestimonials.map((t: any, i: number) => (
-                <div
-                  key={t.id}
-                  className={`transition-all duration-600 ${testimonialsAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}
-                  style={{ transitionDelay: `${i * 100}ms` }}
-                >
-                  <TestimonialCard testimonial={t} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-white/30">
-              <Star size={48} className="mx-auto mb-4 opacity-30" />
-              <p>Testimonials will appear once data is seeded.</p>
-            </div>
+          {displayTestimonials.length > 0 && (
+            <>
+              {/* Horizontal carousel - 4 cards */}
+              <div className="testimonial-carousel pb-4">
+                {displayTestimonials.slice(0, 4).map((t: any) => (
+                  <div key={t.id} className="anim-hidden">
+                    <TestimonialCard testimonial={t} />
+                  </div>
+                ))}
+              </div>
+
+              {/* See More - expands to full grid */}
+              {displayTestimonials.length > 4 && (
+                <TestimonialsExpander testimonials={displayTestimonials.slice(4)} />
+              )}
+            </>
           )}
         </div>
       </section>
