@@ -83,7 +83,7 @@ export default function TrackPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-blue-200/60 text-sm mb-1">Application for</p>
-                  <h2 className="text-2xl font-bold">{result.studentName}</h2>
+                  <h2 className="text-2xl font-bold text-white">{result.studentName}</h2>
                   <p className="text-blue-100/70 mt-1">{result.program} — {result.university}</p>
                 </div>
                 <div className="text-right">

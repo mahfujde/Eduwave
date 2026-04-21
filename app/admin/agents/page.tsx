@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   Handshake, Check, X, Loader2, Eye, Clock, Users,
   Mail, Phone, MapPin, Building, MessageSquare,
-  Copy, CheckCircle2, ExternalLink, GraduationCap,
+  Copy, CheckCircle2, ExternalLink, GraduationCap, Trash2, Download,
 } from "lucide-react";
 
 const STATUS_STYLES: Record<string,string> = {
@@ -35,6 +35,8 @@ export default function AdminAgentsPage() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [filter, setFilter]   = useState<"all"|"pending"|"approved"|"rejected">("all");
   const [copiedField, setCopiedField] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchApps = async () => {
     setLoading(true);
@@ -128,11 +130,26 @@ export default function AdminAgentsPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--primary)]">Agent Management</h1>
           <p className="text-gray-500 text-sm mt-1">Review applications, manage agents, track referred students</p>
         </div>
+        <button onClick={() => {
+          if (!apps.length) return;
+          const headers = ["Name","Email","Phone","Company","Region","Status","Agent Code","Applied"];
+          const rows = apps.map((a: any) => [
+            a.name, a.email, a.phone || "", a.company || "", a.region || "",
+            a.status, a.user?.agentCode || "", new Date(a.createdAt).toLocaleDateString(),
+          ]);
+          const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+          const blob = new Blob([csv], { type: "text/csv" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a"); a.href = url; a.download = `eduwave-agents-${Date.now()}.csv`; a.click();
+          URL.revokeObjectURL(url);
+        }} className="btn-secondary !py-2 text-sm flex items-center gap-2">
+          <Download size={16} /> Export CSV
+        </button>
       </div>
 
       {/* Stats */}
@@ -195,8 +212,12 @@ export default function AdminAgentsPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-400 text-xs">{new Date(app.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => handleViewAgent(app)}
-                      className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Eye size={13}/></button>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleViewAgent(app)}
+                        className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Eye size={13}/></button>
+                      <button onClick={() => setDeleteTarget(app)} title="Delete Agent"
+                        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"><Trash2 size={13}/></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -407,6 +428,32 @@ export default function AdminAgentsPage() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-red-600 mb-2">Delete Agent</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to delete agent <strong>{deleteTarget.name}</strong>? This will also deactivate their account.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200">Cancel</button>
+              <button onClick={async () => {
+                setDeleting(true);
+                await fetch(`/api/admin/agents?id=${deleteTarget.id}`, { method: "DELETE" });
+                setApps(prev => prev.filter(a => a.id !== deleteTarget.id));
+                setDeleteTarget(null);
+                setDeleting(false);
+                showToast(`Agent "${deleteTarget.name}" deleted successfully.`, "success");
+              }} disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 flex items-center justify-center gap-2">
+                {deleting ? <Loader2 size={14} className="animate-spin"/> : <Trash2 size={14}/>} Delete
+              </button>
             </div>
           </div>
         </div>

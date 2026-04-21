@@ -100,14 +100,14 @@ export default function ServicesPage() {
       {/* Hero */}
       <section
         ref={heroAnim.ref}
-        className="relative py-20 md:py-28 overflow-hidden"
+        className="dark-gradient-bg relative py-20 md:py-28 overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 40%, #2A3B6F 100%)" }}
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full bg-[var(--accent)]/[0.05] animate-float" />
         </div>
         <div className="container-custom relative z-10 text-center">
-          <div className={`transition-all duration-1000 ${heroAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className={`transition-all duration-1000 ${heroAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-[var(--accent)] text-sm font-semibold mb-4">
               100% Free of Charge
             </span>
@@ -122,7 +122,7 @@ export default function ServicesPage() {
       {/* Intro */}
       <section ref={introAnim.ref} className="section bg-white">
         <div className="container-custom">
-          <div className={`max-w-3xl mx-auto text-center transition-all duration-800 ${introAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className={`max-w-3xl mx-auto text-center transition-all duration-800 ${introAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <p className="text-gray-600 text-lg leading-relaxed">
               At Eduwave Educational Consultancy, we do not simply process your application and consider our
               responsibility finished. We act as your <strong className="text-[var(--primary)]">local guardian in Malaysia</strong>.
@@ -155,7 +155,7 @@ export default function ServicesPage() {
                 key={svc.title}
                 className={`group bg-white rounded-2xl p-7 border border-gray-100 hover:border-[var(--accent)]/30
                          hover:shadow-xl hover:-translate-y-1 transition-all duration-500
-                         ${gridAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}
+                         ${gridAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
                 style={{ transitionDelay: `${i * 60}ms` }}
               >
                 <div className="flex items-start gap-5">
@@ -178,8 +178,8 @@ export default function ServicesPage() {
       <section ref={teamAnim.ref} className="section bg-white">
         <div className="container-custom">
           <div
-            className={`max-w-4xl mx-auto rounded-3xl p-8 md:p-12 overflow-hidden relative
-                      transition-all duration-800 ${teamAnim.visible ? "opacity-100 scale-100" : "opacity-100 scale-100"}`}
+            className={`dark-gradient-bg max-w-4xl mx-auto rounded-3xl p-8 md:p-12 overflow-hidden relative
+                      transition-all duration-800 ${teamAnim.visible ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
             style={{ background: "linear-gradient(135deg, #1A2B5F 0%, #0F1B3F 100%)" }}
           >
             <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-[var(--accent)]/10 -translate-y-1/2 translate-x-1/2" />
@@ -219,7 +219,7 @@ export default function ServicesPage() {
       {/* CTA */}
       <section ref={ctaAnim.ref} className="py-16 bg-gradient-to-r from-[var(--accent)] to-[#D04E18]">
         <div className="container-custom text-center">
-          <div className={`transition-all duration-800 ${ctaAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className={`transition-all duration-800 ${ctaAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <h2 className="text-white text-3xl font-extrabold mb-4">All These Services. Zero Cost. Always.</h2>
             <p className="text-white/80 mb-8 max-w-xl mx-auto">
               Ready to take the first step? Reach out and get free, honest guidance from our Malaysia-based team.

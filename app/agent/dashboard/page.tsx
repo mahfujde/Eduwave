@@ -36,7 +36,7 @@ export default function AgentDashboard() {
       {/* Welcome banner */}
       <div className="bg-gradient-to-r from-[#1B3A2F] to-[#2A5C45] rounded-2xl p-8 text-white">
         <p className="text-green-200/60 text-sm mb-1">Welcome back</p>
-        <h1 className="text-3xl font-bold">{session?.user?.name} 👋</h1>
+        <h1 className="text-3xl font-bold text-white">{session?.user?.name} 👋</h1>
         <p className="text-green-100/60 mt-2 text-sm">You have referred {students.length} student{students.length !== 1 ? "s" : ""} — {enrolled} enrolled.</p>
 
         {/* Referral code */}

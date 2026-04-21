@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   GraduationCap, Loader2, Eye, X, Search, Phone, Mail,
   MapPin, Calendar, BookOpen, Award, FileText, User,
-  MessageSquare, Send, ExternalLink, Filter,
+  MessageSquare, Send, ExternalLink, Filter, Trash2, Download,
 } from "lucide-react";
 
 const APP_STATUS_STYLES: Record<string,string> = {
@@ -206,6 +206,8 @@ export default function AdminStudentsPage() {
   const [viewing, setViewing]   = useState<any>(null);
   const [search, setSearch]     = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/users?role=STUDENT")
@@ -235,6 +237,21 @@ export default function AdminStudentsPage() {
           <h1 className="text-2xl font-bold text-[var(--primary)]">Students</h1>
           <p className="text-gray-500 text-sm mt-1">{students.length} total students — view profiles, applications & messages</p>
         </div>
+        <button onClick={() => {
+          if (!students.length) return;
+          const headers = ["Name","Email","Phone","Status","Referred By","Joined"];
+          const rows = students.map((s: any) => [
+            s.name || "", s.email, s.phone || "", s.isActive ? "Active" : "Inactive",
+            s.referredBy || "Direct", new Date(s.createdAt).toLocaleDateString(),
+          ]);
+          const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+          const blob = new Blob([csv], { type: "text/csv" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a"); a.href = url; a.download = `eduwave-students-${Date.now()}.csv`; a.click();
+          URL.revokeObjectURL(url);
+        }} className="btn-secondary !py-2 text-sm flex items-center gap-2">
+          <Download size={16} /> Export CSV
+        </button>
       </div>
 
       {/* Stats */}
@@ -324,6 +341,10 @@ export default function AdminStudentsPage() {
                           <ExternalLink size={13}/>
                         </a>
                       )}
+                      <button onClick={() => setDeleteTarget(s)} title="Delete Student"
+                        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                        <Trash2 size={13}/>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -335,6 +356,31 @@ export default function AdminStudentsPage() {
 
       {/* Detail Modal */}
       {viewing && <StudentDetailModal student={viewing} onClose={() => setViewing(null)} />}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-red-600 mb-2">Delete Student</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to delete <strong>{deleteTarget.name || deleteTarget.email}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200">Cancel</button>
+              <button onClick={async () => {
+                setDeleting(true);
+                await fetch(`/api/admin/users?id=${deleteTarget.id}`, { method: "DELETE" });
+                setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
+                setDeleteTarget(null);
+                setDeleting(false);
+              }} disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 flex items-center justify-center gap-2">
+                {deleting ? <Loader2 size={14} className="animate-spin"/> : <Trash2 size={14}/>} Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

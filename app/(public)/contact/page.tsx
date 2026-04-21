@@ -38,14 +38,14 @@ export default function ContactPage() {
       {/* Hero */}
       <section
         ref={heroAnim.ref}
-        className="relative py-16 md:py-24 overflow-hidden"
+        className="dark-gradient-bg relative py-16 md:py-24 overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 40%, #2A3B6F 100%)" }}
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/3 right-1/5 w-[300px] h-[300px] rounded-full bg-[var(--accent)]/[0.05] animate-float" />
         </div>
         <div className="container-custom relative z-10 text-center">
-          <div className={`transition-all duration-1000 ${heroAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className={`transition-all duration-1000 ${heroAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 mb-4">
               <Headphones size={14} className="text-[var(--accent)]" />
               <span className="text-sm text-white/90">24/7 Virtual Counselling from Malaysia</span>
@@ -61,7 +61,7 @@ export default function ContactPage() {
       </section>
 
       <section ref={formAnim.ref} className="section bg-white -mt-8">
-        <div className={`container-custom transition-all duration-800 ${formAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+        <div className={`container-custom transition-all duration-800 ${formAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Form */}
             <div className="lg:col-span-2">

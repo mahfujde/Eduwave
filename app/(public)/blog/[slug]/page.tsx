@@ -117,7 +117,7 @@ export default function BlogPostPage() {
 
         {/* Bottom CTA */}
         <div className="mt-12 p-8 rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white text-center">
-          <h3 className="text-xl font-bold mb-2">Interested in Studying in Malaysia?</h3>
+          <h3 className="text-xl font-bold mb-2 text-white">Interested in Studying in Malaysia?</h3>
           <p className="text-blue-100/80 mb-6">
             Get expert guidance from our team. Free consultation available.
           </p>

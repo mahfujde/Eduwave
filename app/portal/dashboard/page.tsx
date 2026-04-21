@@ -29,7 +29,7 @@ export default function StudentDashboard() {
       {/* Welcome */}
       <div className="bg-gradient-to-r from-[#0F1B3F] to-[#1A2B5F] rounded-2xl p-8 text-white">
         <p className="text-blue-200/70 text-sm font-medium mb-1">Welcome back</p>
-        <h1 className="text-3xl font-bold">{session?.user?.name} 👋</h1>
+        <h1 className="text-3xl font-bold text-white">{session?.user?.name} 👋</h1>
         <p className="text-blue-100/60 mt-2 text-sm">
           {applications.length === 0
             ? "You haven't submitted any applications yet. Start your journey today!"

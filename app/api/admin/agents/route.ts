@@ -158,3 +158,28 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
 }
+
+// DELETE — delete an agent application
+export async function DELETE(req: Request) {
+  try {
+    const session = await auth();
+    if (!session || !isAdmin((session.user as any).role)) return NextResponse.json({ success: false }, { status: 401 });
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ success: false, message: "ID required" }, { status: 400 });
+
+    const agentApp = await prisma.agentApplication.findUnique({ where: { id } });
+    if (!agentApp) return NextResponse.json({ success: false, message: "Not found" }, { status: 404 });
+
+    // If the agent has an associated user account, deactivate it
+    if (agentApp.userId) {
+      await prisma.user.update({ where: { id: agentApp.userId }, data: { isActive: false, isApproved: false } }).catch(() => {});
+    }
+
+    await prisma.agentApplication.delete({ where: { id } });
+    return NextResponse.json({ success: true, message: "Agent application deleted" });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+  }
+}

@@ -7,7 +7,7 @@ export default function PrivacyPolicyPage() {
     <>
 
       {/* Hero */}
-      <section className="py-16 md:py-20" style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 100%)" }}>
+      <section className="dark-gradient-bg py-16 md:py-20" style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 100%)" }}>
         <div className="container-custom text-center">
           <h1 className="text-white text-4xl font-extrabold">Privacy Policy</h1>
           <p className="mt-3 text-blue-100/60">Last updated: April 2026</p>

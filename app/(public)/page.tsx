@@ -1,43 +1,38 @@
 "use client";
 
-
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useSiteSettings, useUniversities, useTestimonials } from "@/hooks/useData";
 import UniversityCard from "@/components/UniversityCard";
 import TestimonialCard from "@/components/TestimonialCard";
+import TestimonialsCarousel from "@/components/TestimonialsCarousel";
 import YouTubeSection from "@/components/YouTubeSection";
 import type { CmsSection } from "@/types";
 import {
   ArrowRight, MessageCircle, GraduationCap, Building2, Shield,
-  Users, Clock, Headphones, Star, ChevronRight, Plane,
+  Users, Clock, Headphones, Star, ChevronRight, ChevronLeft, Plane,
   FileCheck, Home, Award, HeartHandshake, Stethoscope,
   BookOpen, Globe, CheckCircle2, TrendingUp,
 } from "lucide-react";
 
-/* ─── Scroll-triggered animation hook ─── */
-function useInView(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
+/* ─── Animated counter ─── */
+function Counter({ target, suffix = "" }: { target: string; suffix?: string }) {
+  const [count, setCount] = useState(0);
   const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const numericPart = parseInt(target.replace(/[^0-9]/g, "")) || 0;
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.unobserve(el); } },
-      { threshold }
+      { threshold: 0.15 }
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
-}
-
-/* ─── Animated counter ─── */
-function Counter({ target, suffix = "" }: { target: string; suffix?: string }) {
-  const [count, setCount] = useState(0);
-  const numericPart = parseInt(target.replace(/[^0-9]/g, "")) || 0;
-  const { ref, visible } = useInView();
+  }, []);
 
   useEffect(() => {
     if (!visible || numericPart === 0) return;
@@ -111,19 +106,33 @@ export default function HomePage() {
   const { data: testimonials } = useTestimonials();
   const displayTestimonials = testimonials && testimonials.length > 0 ? testimonials : fallbackTestimonials;
 
+
+
+  // FIX: Auto-scroll carousel
+  const carouselPaused = useRef(false);
+  useEffect(() => {
+    const el = document.getElementById('uni-carousel');
+    if (!el) return;
+    const timer = setInterval(() => {
+      if (carouselPaused.current) return;
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: 160, behavior: 'smooth' });
+      }
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [universities]);
+
   // Build settings map
   const s: Record<string, string> = {};
   settingsArr?.forEach((c: any) => { s[c.key] = c.value; });
 
-  const heroAnim = useInView(0.1);
-  const statsAnim = useInView(0.2);
-  const introAnim = useInView(0.15);
-  const uniAnim = useInView(0.1);
-  const servicesAnim = useInView(0.1);
-  const testimonialsAnim = useInView(0.1);
-  const ctaAnim = useInView(0.15);
+  // IntersectionObserver + CSS handles all animations via data-anim attributes
 
-  // Fetch YouTube section from CMS
+  // Fetch CMS sections for editable text content
+  const [cmsSections, setCmsSections] = useState<Record<string, CmsSection>>({});
+  const [cmsById, setCmsById] = useState<Record<string, CmsSection>>({});
   const [ytSection, setYtSection] = useState<CmsSection | null>(null);
   useEffect(() => {
     fetch("/api/public/pages?slug=home")
@@ -132,13 +141,28 @@ export default function HomePage() {
         if (d.success && d.data?.sections) {
           try {
             const sections: CmsSection[] = JSON.parse(d.data.sections);
-            const yt = sections.find(sec => sec.type === "youtube" && sec.visible);
-            if (yt) setYtSection(yt);
+            const typeMap: Record<string, CmsSection> = {};
+            const idMap: Record<string, CmsSection> = {};
+            sections.filter(sec => sec.visible).forEach(sec => {
+              typeMap[sec.type] = sec;
+              if (sec.id) idMap[sec.id] = sec;
+            });
+            setCmsSections(typeMap);
+            setCmsById(idMap);
+            if (typeMap.youtube) setYtSection(typeMap.youtube);
           } catch {}
         }
       })
       .catch(() => {});
   }, []);
+
+  // Helper: get CMS text by type or fallback
+  const cms = (type: string, field: string, fallback: string) => {
+    const sec = cmsSections[type];
+    return sec && (sec as any)[field] ? (sec as any)[field] : fallback;
+  };
+  // Helper: get CMS section by id
+  const getCms = (id: string) => cmsById[id] || null;
 
   // Services list from PDF
   const services = [
@@ -161,8 +185,7 @@ export default function HomePage() {
 
       {/* ═══ HERO SECTION ═══ */}
       <section
-        ref={heroAnim.ref}
-        className="relative min-h-[92vh] flex items-center overflow-hidden"
+        className="dark-gradient-bg relative min-h-[92vh] flex items-center overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 40%, #2A3B6F 100%)" }}
       >
         {/* Animated background elements */}
@@ -175,7 +198,7 @@ export default function HomePage() {
         <div className="container-custom relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left content */}
-            <div className={`transition-all duration-1000 ${heroAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+            <div data-anim="fade-up">
               {/* 24/7 badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 mb-6">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
@@ -192,9 +215,8 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-6 text-lg md:text-xl text-blue-100/70 leading-relaxed max-w-lg">
-                Malaysia-based. Available 24/7. Completely Free. <br className="hidden md:block" />
-                350+ students successfully enrolled.
+              <p className="mt-6 text-lg md:text-xl text-blue-100/70 leading-relaxed max-w-lg text-justify">
+                {cms("hero", "content", "Malaysia-based. Available 24/7. Completely Free. 350+ students successfully enrolled.")}
               </p>
 
               <div className="flex flex-wrap gap-4 mt-8">
@@ -232,7 +254,7 @@ export default function HomePage() {
             </div>
 
             {/* Right visual */}
-            <div className={`hidden lg:block transition-all duration-1000 delay-300 ${heroAnim.visible ? "opacity-100 translate-x-0" : "opacity-100 translate-x-0"}`}>
+            <div className="hidden lg:block" data-anim="slide-right" data-delay="0.3">
               <div className="relative">
                 {/* Main hero card */}
                 <div className="w-full aspect-square max-w-md mx-auto relative">
@@ -273,9 +295,9 @@ export default function HomePage() {
       </section>
 
       {/* ═══ STATS BAR ═══ */}
-      <section ref={statsAnim.ref} className="relative -mt-12 z-20">
+      <section className="relative -mt-12 z-20">
         <div className="container-custom">
-          <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 transition-all duration-800 ${statsAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6" data-anim-stagger="fade-up">
             {[
               { num: "350", suffix: "+", label: "Students Enrolled", icon: Users, color: "blue" },
               { num: "100000", suffix: "+", label: "Community Members", icon: Building2, color: "purple" },
@@ -303,97 +325,90 @@ export default function HomePage() {
       {universities && universities.length > 0 && (
         <section className="section bg-white overflow-hidden">
           <div className="container-custom">
-            <div className="text-center mb-10 anim-hidden">
+            <div className="text-center mb-10" data-anim="fade-up">
               <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-sm font-semibold mb-4">
-                Trusted Partners
+                {getCms("home-universities")?.subtitle || "Trusted Partners"}
               </span>
-              <h2 className="text-[var(--primary)]">Top Partnered Universities</h2>
+              <h2 className="text-[var(--primary)]">{getCms("home-universities")?.title || "Top Universities We Are Partnered With"}</h2>
               <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">
-                We have direct partnerships with Malaysia&apos;s finest universities, ensuring seamless admission for our students.
+                {getCms("home-universities")?.content || "We have direct partnerships with Malaysia's finest universities, ensuring seamless admission for our students."}
               </p>
             </div>
-          </div>
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10" />
-            <div className="logo-carousel-track">
-              {[...universities, ...universities].map((uni: any, i: number) => (
-                <Link
-                  key={`${uni.id}-${i}`}
-                  href={`/universities/${uni.slug}`}
-                  className="flex items-center justify-center mx-6 shrink-0 w-32 h-20 rounded-xl bg-gray-50 border border-gray-100 hover:shadow-lg hover:border-[var(--accent)]/30 transition-all duration-300 p-3 group"
-                >
-                  {uni.logo ? (
-                    <Image
-                      src={uni.logo}
-                      alt={uni.name}
-                      width={100}
-                      height={60}
-                      className="object-contain w-full h-full opacity-70 group-hover:opacity-100 transition-opacity"
-                    />
-                  ) : (
-                    <span className="text-xs font-bold text-gray-400 text-center leading-tight group-hover:text-[var(--primary)]">
-                      {uni.shortName || uni.name}
-                    </span>
-                  )}
-                </Link>
-              ))}
+
+            {/* FIX: Auto-scrolling carousel with arrow navigation */}
+            <div className="relative group/carousel"
+              onMouseEnter={() => { carouselPaused.current = true; }}
+              onMouseLeave={() => { carouselPaused.current = false; }}>
+              {/* Left arrow */}
+              <button onClick={() => { const el = document.getElementById('uni-carousel'); if (el) el.scrollBy({ left: -200, behavior: 'smooth' }); }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover/carousel:opacity-100 -ml-2"
+                aria-label="Scroll left">
+                <ChevronLeft size={20} className="text-[var(--primary)]" />
+              </button>
+              {/* Right arrow */}
+              <button onClick={() => { const el = document.getElementById('uni-carousel'); if (el) el.scrollBy({ left: 200, behavior: 'smooth' }); }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover/carousel:opacity-100 -mr-2"
+                aria-label="Scroll right">
+                <ChevronRight size={20} className="text-[var(--primary)]" />
+              </button>
+
+              {/* Fade edges */}
+              <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+              <div id="uni-carousel" className="flex gap-5 overflow-x-auto scrollbar-hide scroll-smooth py-2 px-4"
+                style={{ scrollSnapType: 'x mandatory' }}>
+                {universities.map((uni: any, i: number) => (
+                  <Link
+                    key={uni.id}
+                    href={`/universities/${uni.slug}`}
+                    className="flex items-center justify-center shrink-0 w-36 h-24 rounded-xl bg-gray-50 border border-gray-100 hover:shadow-lg hover:border-[var(--accent)]/30 transition-all duration-300 p-3 group"
+                    style={{ scrollSnapAlign: 'start' }}
+                  >
+                    {uni.logo ? (
+                      <Image src={uni.logo} alt={uni.name} width={100} height={60}
+                        className="object-contain w-full h-full opacity-70 group-hover:opacity-100 transition-opacity" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                          style={{ background: `hsl(${(i * 37) % 360}, 55%, 45%)` }}>
+                          {(uni.shortName || uni.name).slice(0, 3)}
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-500 text-center leading-tight max-w-[80px] truncate group-hover:text-[var(--primary)]">
+                          {uni.shortName || uni.name}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </section>
       )}
 
-      {/* ═══ INTRO SECTION ═══ */}
-      <section ref={introAnim.ref} className="section bg-white">
-        <div className="container-custom">
-          <div className={`max-w-3xl mx-auto text-center transition-all duration-800 ${introAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
-            <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-sm font-semibold mb-4">
-              Who We Are
-            </span>
-            <h2 className="text-[var(--primary)]">Your Local Guardian in Malaysia</h2>
-            <p className="mt-6 text-gray-600 text-lg leading-relaxed">
-              Every great journey begins with a single, courageous decision. At Eduwave Educational Consultancy,
-              we make sure that decision leads somewhere extraordinary. Founded in 2022 and operating directly
-              from Malaysia, we are more than a consultancy. We are your local guardian on the ground, your guide
-              through the process, and your strongest support system from the moment you reach out until long
-              after you settle into student life.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-              <Link href="/about" className="btn-primary">
-                Learn About Us <ChevronRight size={16} />
-              </Link>
-              <Link href="/services" className="btn-secondary">
-                Our Free Services <ArrowRight size={16} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ═══ SERVICES OVERVIEW (12 from PDF) ═══ */}
-      <section ref={servicesAnim.ref} className="section" style={{ background: "var(--muted)" }}>
+      <section className="section" style={{ background: "var(--muted)" }}>
         <div className="container-custom">
-          <div className={`text-center mb-12 transition-all duration-700 ${servicesAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className="text-center mb-12" data-anim="fade-up">
             <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-sm font-semibold mb-4">
               100% Free Services
             </span>
-            <h2 className="text-[var(--primary)]">Everything We Do — At Zero Cost</h2>
-            <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-              No consultation fees. No processing fees. No hidden costs. Not ever.
-              We are funded by our university partners, which means world-class support at zero cost to you.
+            <h2 className="text-[var(--primary)]">{cms("cards", "title", "Everything We Do — At Zero Cost")}</h2>
+            <p className="mt-4 text-gray-700 max-w-2xl mx-auto text-justify">
+              {cms("cards", "content", "No consultation fees. No processing fees. No hidden costs. Not ever. We are funded by our university partners, which means world-class support at zero cost to you.")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" data-anim-stagger="fade-up">
             {services.map((svc, i) => {
               const Icon = serviceIcons[svc.icon] || GraduationCap;
               return (
                 <div
                   key={svc.title}
-                  className={`group bg-white rounded-xl p-6 border border-gray-100 hover:border-[var(--accent)]/30
-                           hover:shadow-lg hover:-translate-y-1 transition-all duration-500
-                           ${servicesAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}
-                  style={{ transitionDelay: `${i * 60}ms` }}
+                  className="group bg-white rounded-xl p-6 border border-gray-100 hover:border-[var(--accent)]/30
+                           hover:shadow-lg hover:-translate-y-1 transition-all duration-500"
                 >
                   <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center
                                group-hover:bg-[var(--accent)] group-hover:text-white transition-all duration-300">
@@ -407,8 +422,7 @@ export default function HomePage() {
           </div>
 
           {/* Zero charge banner */}
-          <div className={`mt-10 p-6 rounded-2xl bg-gradient-to-r from-[var(--accent)] to-[#D04E18] text-white text-center
-                        transition-all duration-700 delay-300 ${servicesAnim.visible ? "opacity-100 scale-100" : "opacity-100 scale-100"}`}>
+          <div className="mt-10 p-6 rounded-2xl bg-gradient-to-r from-[var(--accent)] to-[#D04E18] text-white text-center" data-anim="zoom">
             <p className="text-lg font-bold">🎓 Every service above is 100% FREE for all students</p>
             <p className="text-sm text-white/80 mt-1">Eduwave has a full-time team based in Malaysia providing all services on the ground</p>
           </div>
@@ -428,28 +442,19 @@ export default function HomePage() {
       )}
 
       {/* ═══ FEATURED UNIVERSITIES ═══ */}
-      <section ref={uniAnim.ref} className="section bg-white">
+      <section className="section bg-white">
         <div className="container-custom">
-          <div className={`text-center mb-12 transition-all duration-700 ${uniAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}>
+          <div className="text-center mb-12" data-anim="fade-up">
             <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-sm font-semibold mb-4">
               Our Partners
             </span>
-            <h2 className="text-[var(--primary)]">32+ Partner Universities</h2>
-            <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-              We have carefully built direct partnerships with some of Malaysia&apos;s finest universities.
-              Every institution has been evaluated for academic quality, career outcomes, and suitability
-              for Bangladeshi students.
-            </p>
+            <h2 className="text-[var(--primary)]">{cms("text", "title", "32+ Partner Universities")}</h2>
           </div>
 
           {universities && universities.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {universities.slice(0, 6).map((uni: any, i: number) => (
-                <div
-                  key={uni.id}
-                  className={`transition-all duration-600 ${uniAnim.visible ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}
-                  style={{ transitionDelay: `${i * 100}ms` }}
-                >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-anim-stagger="fade-up">
+              {universities.slice(0, 6).map((uni: any) => (
+                <div key={uni.id}>
                   <UniversityCard university={uni} />
                 </div>
               ))}
@@ -461,7 +466,7 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="text-center mt-10">
+          <div className="text-center mt-10" data-anim="fade-up">
             <Link href="/universities" className="btn-secondary group">
               View All Universities <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -471,47 +476,32 @@ export default function HomePage() {
 
       {/* ═══ TESTIMONIALS ═══ */}
       <section
-        ref={testimonialsAnim.ref}
-        className="section"
+        className="dark-gradient-bg section"
         style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 100%)" }}
       >
         <div className="container-custom">
-          <div className="text-center mb-12 anim-hidden">
+          <div className="text-center mb-12" data-anim="fade-up">
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-[var(--accent)] text-sm font-semibold mb-4">
               Student Stories
             </span>
-            <h2 className="text-white">What Our Students Say</h2>
+            <h2 className="text-white">{cms("testimonials", "title", "What Our Students Say")}</h2>
             <p className="mt-4 text-blue-100/60 max-w-xl mx-auto">
               350+ students have trusted Eduwave for their study abroad journey. Here&apos;s what some of them have to say.
             </p>
           </div>
 
           {displayTestimonials.length > 0 && (
-            <>
-              {/* Horizontal carousel - 4 cards */}
-              <div className="testimonial-carousel pb-4">
-                {displayTestimonials.slice(0, 4).map((t: any) => (
-                  <div key={t.id} className="anim-hidden">
-                    <TestimonialCard testimonial={t} />
-                  </div>
-                ))}
-              </div>
-
-              {/* See More - expands to full grid */}
-              {displayTestimonials.length > 4 && (
-                <TestimonialsExpander testimonials={displayTestimonials.slice(4)} />
-              )}
-            </>
+              <TestimonialsCarousel testimonials={displayTestimonials.slice(0, 12)} />
           )}
         </div>
       </section>
 
       {/* ═══ CTA SECTION ═══ */}
-      <section ref={ctaAnim.ref} className="section bg-white">
+      <section className="section bg-white">
         <div className="container-custom">
           <div
-            className={`relative overflow-hidden rounded-3xl p-10 md:p-16 text-center
-                      transition-all duration-1000 ${ctaAnim.visible ? "opacity-100 scale-100" : "opacity-100 scale-100"}`}
+            className="dark-gradient-bg relative overflow-hidden rounded-3xl p-10 md:p-16 text-center"
+            data-anim="zoom"
             style={{ background: "linear-gradient(135deg, #1A2B5F 0%, #0F1B3F 100%)" }}
           >
             {/* Decorative circles */}
@@ -520,11 +510,10 @@ export default function HomePage() {
 
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
-                Ready to Start Your Journey?
+                {cms("cta", "title", "Ready to Start Your Journey?")}
               </h2>
               <p className="text-blue-100/70 text-lg max-w-xl mx-auto mb-8">
-                Reach out and one of our Malaysia-based counsellors will respond promptly with honest, practical guidance.
-                No pressure. No obligation. Just real answers.
+                {cms("cta", "content", "Reach out and one of our Malaysia-based counsellors will respond promptly with honest, practical guidance. No pressure. No obligation. Just real answers.")}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/contact" className="btn-primary text-base !px-10 !py-4 group">

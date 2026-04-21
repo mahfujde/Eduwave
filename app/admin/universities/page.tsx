@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAdminUniversities, useCreateMutation, useUpdateMutation, useDeleteMutation } from "@/hooks/useData";
 import { useForm } from "react-hook-form";
 import type { University } from "@/types";
 import { generateSlug } from "@/lib/utils";
-import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Loader2, X, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Loader2, X, Upload, Search, AlertCircle } from "lucide-react";
 import DeleteModal from "@/components/admin/DeleteModal";
 import Image from "next/image";
 
@@ -18,11 +18,26 @@ export default function AdminUniversitiesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<University | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [search, setSearch] = useState("");
+  const [dupError, setDupError] = useState("");
 
   const { register, handleSubmit, reset, setValue, watch } = useForm<any>();
 
+  // FIX: Search/filter universities
+  const filtered = useMemo(() => {
+    if (!universities) return [];
+    if (!search.trim()) return universities;
+    const q = search.toLowerCase();
+    return universities.filter((u) =>
+      u.name.toLowerCase().includes(q) ||
+      u.shortName?.toLowerCase().includes(q) ||
+      u.city?.toLowerCase().includes(q)
+    );
+  }, [universities, search]);
+
   const openCreate = () => {
     setEditing(null);
+    setDupError("");
     reset({
       name: "", slug: "", shortName: "", description: "", country: "Malaysia", city: "",
       website: "", logo: "", banner: "", ranking: "", established: "", type: "Private",
@@ -33,19 +48,37 @@ export default function AdminUniversitiesPage() {
 
   const openEdit = (uni: University) => {
     setEditing(uni);
+    setDupError("");
     reset(uni);
     setShowForm(true);
   };
 
   const onSubmit = async (data: any) => {
     if (!data.slug) data.slug = generateSlug(data.name);
-    if (editing) {
-      await updateMut.mutateAsync({ id: editing.id, data });
-    } else {
-      await createMut.mutateAsync(data);
+
+    // FIX: Duplicate protection — check if name already exists (ignore self when editing)
+    const existingByName = universities?.find(
+      (u) => u.name.toLowerCase().trim() === data.name.toLowerCase().trim() && u.id !== editing?.id
+    );
+    if (existingByName) {
+      setDupError(`A university named "${existingByName.name}" already exists. Please use a different name.`);
+      return;
     }
-    setShowForm(false);
-    reset();
+
+    try {
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, data });
+      } else {
+        await createMut.mutateAsync(data);
+      }
+      setShowForm(false);
+      setDupError("");
+      reset();
+    } catch (err: any) {
+      if (err?.message?.includes("Slug already exists") || err?.response?.status === 409) {
+        setDupError("This university slug already exists. Try a different name or slug.");
+      }
+    }
   };
 
   const handleDelete = async () => {
@@ -85,6 +118,25 @@ export default function AdminUniversitiesPage() {
         </button>
       </div>
 
+      {/* FIX: Search Bar */}
+      <div className="card p-4">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search universities by name, short name, or city..."
+            className="input-field !pl-10"
+          />
+        </div>
+        {search && (
+          <p className="text-xs text-gray-400 mt-2">
+            Showing {filtered.length} of {universities?.length || 0} universities
+          </p>
+        )}
+      </div>
+
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto p-4">
@@ -99,6 +151,14 @@ export default function AdminUniversitiesPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* FIX: Duplicate error banner */}
+              {dupError && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                  <AlertCircle size={16} className="shrink-0" />
+                  {dupError}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
@@ -208,6 +268,12 @@ export default function AdminUniversitiesPage() {
       {/* Table */}
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2 size={32} className="animate-spin text-[var(--accent)]" /></div>
+      ) : filtered.length === 0 && search ? (
+        <div className="text-center py-16">
+          <Search size={36} className="text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 font-medium">No universities match &ldquo;{search}&rdquo;</p>
+          <button onClick={() => setSearch("")} className="text-sm text-[var(--accent)] mt-2 hover:underline">Clear search</button>
+        </div>
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
@@ -222,7 +288,7 @@ export default function AdminUniversitiesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {universities?.map((uni) => (
+                {filtered?.map((uni) => (
                   <tr key={uni.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">

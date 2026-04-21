@@ -8,53 +8,42 @@ import { useUniversity } from "@/hooks/useData";
 import {
   MapPin, Globe, Phone, Mail, Calendar, Building2, Award,
   FileCheck, ArrowLeft, Loader2, ExternalLink, ChevronDown,
-  ChevronUp, BookOpen, GraduationCap, Play,
+  ChevronUp, BookOpen, GraduationCap, Play, ChevronRight,
+  Users,
 } from "lucide-react";
 
+// FIX: Tawakkul-style university detail page – light hero, breadcrumbs, full-width sections
 type Tab = "overview" | "courses" | "campus-tour";
-
-const DEPARTMENT_GROUPS: Record<string, string[]> = {
-  "Computer Science & IT": ["Bachelor", "Diploma", "Master", "Foundation"],
-  "Business & Management": ["Bachelor", "Master"],
-  "Engineering & Applied Sciences": ["Bachelor", "Master"],
-  "Natural Sciences": ["Bachelor", "Master"],
-  "Social Sciences & Humanities": ["Bachelor", "Master"],
-  "Law & Legal Studies": ["Bachelor", "Master"],
-  "Art & Design": ["Bachelor", "Diploma"],
-  "Communication & Media": ["Bachelor", "Diploma"],
-};
 
 function DepartmentAccordion({ title, programs }: { title: string; programs: any[] }) {
   const [open, setOpen] = useState(false);
   if (programs.length === 0) return null;
   return (
-    <div className="border border-[var(--border)] rounded-xl overflow-hidden anim-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-gray-50 transition-colors text-left"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/8 flex items-center justify-center">
-            <BookOpen size={15} className="text-[var(--primary)]" />
+          <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center">
+            <BookOpen size={15} className="text-[var(--accent)]" />
           </div>
           <span className="font-semibold text-[var(--primary)] text-sm">{title}</span>
-          <span className="text-xs text-gray-400 font-medium">({programs.length})</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">{programs.length}</span>
         </div>
         {open ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
       </button>
       {open && (
-        <div className="border-t border-[var(--border)] bg-gray-50/60 divide-y divide-gray-100">
+        <div className="border-t border-gray-100 bg-gray-50/60 divide-y divide-gray-100">
           {programs.map((prog) => (
             <div key={prog.id} className="flex items-center justify-between px-5 py-3">
               <div>
                 <p className="text-sm font-medium text-gray-800">{prog.name}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{prog.duration} · {prog.mode}</p>
               </div>
-              <Link
-                href={`/courses/${prog.slug}`}
-                className="text-xs font-semibold text-[var(--accent)] hover:underline shrink-0 ml-4"
-              >
-                View Course →
+              <Link href={`/courses/${prog.slug}`}
+                className="text-xs font-semibold text-[var(--accent)] hover:underline shrink-0 ml-4">
+                View Details →
               </Link>
             </div>
           ))}
@@ -68,6 +57,8 @@ function getYouTubeId(url: string): string | null {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : null;
 }
+
+// Department grouping now uses the `department` field from the Program model
 
 export default function UniversityDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -91,62 +82,57 @@ export default function UniversityDetailPage() {
     );
   }
 
-  // Group programs into departments by level
-  const programsByDept: Record<string, typeof university.programs> = {};
+  // FIX: Group programs by department field from database
+  const programsByDept: Record<string, any[]> = {};
   if (university.programs) {
-    for (const dept of Object.keys(DEPARTMENT_GROUPS)) {
-      programsByDept[dept] = university.programs.filter((p) =>
-        dept === "Computer Science & IT"
-          ? p.name.toLowerCase().includes("computer") || p.name.toLowerCase().includes("it") || p.name.toLowerCase().includes("information") || p.name.toLowerCase().includes("software") || p.name.toLowerCase().includes("cyber")
-          : dept === "Business & Management"
-          ? p.name.toLowerCase().includes("business") || p.name.toLowerCase().includes("management") || p.name.toLowerCase().includes("mba") || p.name.toLowerCase().includes("commerce") || p.name.toLowerCase().includes("accounting")
-          : dept === "Engineering & Applied Sciences"
-          ? p.name.toLowerCase().includes("engineer") || p.name.toLowerCase().includes("electrical") || p.name.toLowerCase().includes("mechanic") || p.name.toLowerCase().includes("civil")
-          : dept === "Art & Design"
-          ? p.name.toLowerCase().includes("art") || p.name.toLowerCase().includes("design") || p.name.toLowerCase().includes("multimedia") || p.name.toLowerCase().includes("creative")
-          : dept === "Communication & Media"
-          ? p.name.toLowerCase().includes("media") || p.name.toLowerCase().includes("communication") || p.name.toLowerCase().includes("journalism")
-          : []
-      );
+    for (const prog of university.programs) {
+      const dept = prog.department || "General";
+      if (!programsByDept[dept]) programsByDept[dept] = [];
+      programsByDept[dept].push(prog);
     }
-
-    // Uncategorized programs go into "Other Programs"
-    const categorized = new Set(Object.values(programsByDept).flat().filter(Boolean).map((p) => p!.id));
-    const uncategorized = university.programs.filter((p) => !categorized.has(p.id));
-    if (uncategorized.length > 0) programsByDept["Other Programs"] = uncategorized;
   }
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "overview", label: "Overview" },
-    { key: "courses", label: "Courses" },
-    ...(university.campusTourVideo ? [{ key: "campus-tour" as Tab, label: "Campus Tour" }] : []),
+  const tabs = [
+    { key: "overview" as Tab, label: "Overview", icon: BookOpen },
+    { key: "courses" as Tab, label: `Courses (${university.programs?.length || 0})`, icon: GraduationCap },
+    ...(university.campusTourVideo ? [{ key: "campus-tour" as Tab, label: "Campus Tour", icon: Play }] : []),
   ];
 
   const videoId = university.campusTourVideo ? getYouTubeId(university.campusTourVideo) : null;
 
-  return (
-    <div>
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] pt-6 pb-8">
-        <div className="container-custom">
-          <Link
-            href="/universities"
-            className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white mb-6 transition-colors"
-          >
-            <ArrowLeft size={15} /> Back to Universities
-          </Link>
+  // Quick info items
+  const quickInfo = [
+    university.city && { icon: MapPin, label: "Location", value: `${university.city}, ${university.country}` },
+    university.established && { icon: Calendar, label: "Established", value: university.established },
+    university.type && { icon: Building2, label: "Type", value: university.type },
+    university.ranking && { icon: Award, label: "Ranking", value: university.ranking },
+    university.programs && { icon: Users, label: "Programs", value: `${university.programs.length} Available` },
+  ].filter(Boolean) as { icon: any; label: string; value: string }[];
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 anim-slide-left anim-show">
+  return (
+    <div className="bg-[var(--background)]">
+
+      {/* Breadcrumb */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="container-custom py-3">
+          <nav className="flex items-center gap-2 text-sm text-gray-500">
+            <Link href="/" className="hover:text-[var(--accent)]">Home</Link>
+            <ChevronRight size={12} />
+            <Link href="/universities" className="hover:text-[var(--accent)]">Universities</Link>
+            <ChevronRight size={12} />
+            <span className="text-gray-800 font-medium truncate max-w-[250px]">{university.shortName || university.name}</span>
+          </nav>
+        </div>
+      </div>
+
+      {/* Hero – light gradient */}
+      <section style={{ background: "linear-gradient(135deg, #EFF6FF 0%, #FFF7ED 50%, #F0FDF4 100%)" }}>
+        <div className="container-custom py-10 md:py-14">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8">
             {/* Logo */}
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white shadow-lg flex items-center justify-center shrink-0 overflow-hidden p-2">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-white shadow-lg border border-gray-100 flex items-center justify-center shrink-0 overflow-hidden p-3">
               {university.logo ? (
-                <Image
-                  src={university.logo}
-                  alt={university.name}
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-contain"
-                />
+                <Image src={university.logo} alt={university.name} width={120} height={120} className="w-full h-full object-contain" />
               ) : (
                 <span className="text-3xl font-bold text-[var(--primary)]">
                   {university.shortName?.[0] || university.name[0]}
@@ -154,38 +140,72 @@ export default function UniversityDetailPage() {
               )}
             </div>
 
-            {/* Name + Location */}
-            <div>
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight">
+            {/* Name + info */}
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[var(--primary)] leading-tight mb-2">
                 {university.name}
               </h1>
               {university.shortName && (
-                <p className="text-white/60 text-sm mt-0.5">({university.shortName})</p>
+                <p className="text-gray-500 text-sm mb-2">({university.shortName})</p>
               )}
               {university.city && (
-                <div className="flex items-center gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-white/90 text-sm font-medium">
-                    <MapPin size={13} />
-                    Location: {university.city}, {university.country}
-                  </span>
-                </div>
+                <p className="text-gray-600 flex items-center gap-1.5 text-sm mb-4">
+                  <MapPin size={14} className="text-[var(--accent)]" />
+                  {university.city}, {university.country}
+                </p>
               )}
+              <div className="flex flex-wrap gap-3">
+                <Link href="/contact" className="btn-primary !px-8 !py-3">
+                  Apply Now <ChevronRight size={14} />
+                </Link>
+                {university.website && (
+                  <a href={university.website} target="_blank" rel="noopener noreferrer"
+                    className="btn-secondary !px-6 !py-3 text-sm">
+                    <Globe size={14} /> Visit Website
+                  </a>
+                )}
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mt-8 bg-white/10 rounded-xl p-1 w-fit overflow-x-auto">
+      {/* Quick Info Cards */}
+      {quickInfo.length > 0 && (
+        <section className="bg-white border-b border-gray-100">
+          <div className="container-custom py-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {quickInfo.map((item) => (
+                <div key={item.label} className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                  <div className="w-10 h-10 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                    <item.icon size={18} className="text-[var(--accent)]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-400 font-medium">{item.label}</p>
+                    <p className="text-sm font-bold text-[var(--primary)] truncate">{item.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Tabs */}
+      <div className="bg-white border-b border-gray-100 sticky top-[96px] z-30">
+        <div className="container-custom">
+          <div className="flex gap-1 overflow-x-auto py-2">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-5 py-2 rounded-lg text-sm font-semibold capitalize transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 ${
+                className={`flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
                   activeTab === tab.key
-                    ? "bg-white text-[var(--primary)] shadow"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
+                    ? "bg-[var(--accent)] text-white shadow-sm"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {tab.key === "campus-tour" && <Play size={13} />}
+                <tab.icon size={14} />
                 {tab.label}
               </button>
             ))}
@@ -193,77 +213,74 @@ export default function UniversityDetailPage() {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Tab Content */}
       <div className="container-custom py-8 md:py-12">
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left: tab content */}
+          {/* Main content (2/3) */}
           <div className="lg:col-span-2 space-y-8">
             {activeTab === "overview" && (
               <>
-                {/* Banner / Images FIRST */}
+                {/* Banner */}
                 {university.banner && (
-                  <div className="rounded-2xl overflow-hidden border border-[var(--border)] shadow-sm anim-zoom">
-                    <Image
-                      src={university.banner}
-                      alt={`${university.name} campus`}
-                      width={800}
-                      height={450}
-                      className="w-full object-cover"
-                    />
+                  <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    <Image src={university.banner} alt={`${university.name} campus`} width={800} height={450} className="w-full object-cover" />
                   </div>
                 )}
 
-                {/* About - AFTER images */}
-                {university.description && (
-                  <div className="anim-hidden">
-                    <h2 className="text-xl font-bold text-[var(--primary)] mb-4">
-                      About the University
+                {/* Description */}
+                {university.description ? (
+                  <section>
+                    <h2 className="text-xl md:text-2xl font-extrabold text-[var(--primary)] mb-4">
+                      About {university.shortName || university.name}
                     </h2>
-                    <div className="prose-eduwave">
-                      {university.description.split("\n").map((para, i) => (
-                        <p key={i}>{para}</p>
+                    <div className="prose-eduwave max-w-none">
+                      {university.description.split("\n").filter(Boolean).map((para, i) => (
+                        <p key={i} className="text-gray-700 leading-relaxed mb-3 text-justify">{para}</p>
                       ))}
                     </div>
+                  </section>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <Building2 size={32} className="mx-auto mb-3 text-gray-300" />
+                    <p className="text-gray-500 text-sm">University description will be available soon.</p>
                   </div>
                 )}
               </>
             )}
 
             {activeTab === "courses" && (
-              <>
-                <div className="anim-hidden">
-                  <h2 className="text-xl font-bold text-[var(--primary)] mb-2">
-                    Departments and Courses
-                  </h2>
-                  <p className="text-gray-500 text-sm mb-6">
-                    {university.programs?.length || 0} programme{(university.programs?.length || 0) !== 1 ? "s" : ""} available
-                  </p>
-                  {(!university.programs || university.programs.length === 0) ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                      <GraduationCap size={32} className="mx-auto mb-3 text-gray-300" />
-                      <p className="text-gray-500 text-sm">No programs listed yet.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {Object.entries(programsByDept).map(([dept, progs]) => (
-                        progs && progs.length > 0 ? (
-                          <DepartmentAccordion key={dept} title={dept} programs={progs} />
-                        ) : null
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
+              <section>
+                <h2 className="text-xl font-bold text-[var(--primary)] mb-2">
+                  Available Programs
+                </h2>
+                <p className="text-gray-500 text-sm mb-6">
+                  {university.programs?.length || 0} programme{(university.programs?.length || 0) !== 1 ? "s" : ""} available
+                </p>
+                {(!university.programs || university.programs.length === 0) ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <GraduationCap size={32} className="mx-auto mb-3 text-gray-300" />
+                    <p className="text-gray-500 text-sm">No programs listed yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(programsByDept).map(([dept, progs]) => (
+                      progs && progs.length > 0 ? (
+                        <DepartmentAccordion key={dept} title={dept} programs={progs} />
+                      ) : null
+                    ))}
+                  </div>
+                )}
+              </section>
             )}
 
             {activeTab === "campus-tour" && (
-              <div className="anim-zoom">
+              <section>
                 <h2 className="text-xl font-bold text-[var(--primary)] mb-4 flex items-center gap-2">
                   <Play size={20} className="text-[var(--accent)]" />
                   Campus Tour
                 </h2>
                 {videoId ? (
-                  <div className="rounded-2xl overflow-hidden border border-[var(--border)] shadow-lg bg-black">
+                  <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-lg bg-black">
                     <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
                       <iframe
                         src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
@@ -277,120 +294,55 @@ export default function UniversityDetailPage() {
                 ) : (
                   <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                     <Play size={40} className="mx-auto mb-3 text-gray-300" />
-                    <p className="text-gray-500 text-sm">Campus tour video will be available soon.</p>
+                    <p className="text-gray-500 text-sm">Campus tour video coming soon.</p>
                   </div>
                 )}
-                <p className="text-sm text-gray-500 mt-4 text-center">
-                  Take a virtual tour of {university.shortName || university.name}&apos;s campus facilities and surroundings.
-                </p>
-              </div>
+              </section>
             )}
           </div>
 
-          {/* Sidebar */}
-          <aside className="space-y-5">
-            {/* Quick Info */}
-            <div className="card p-5 space-y-4 anim-slide-right">
-              <h3 className="text-base font-bold text-[var(--primary)] border-b border-[var(--border)] pb-3">
-                Quick Info
-              </h3>
-
-              {university.city && (
-                <div className="flex items-start gap-3">
-                  <MapPin size={16} className="text-[var(--accent)] mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Location</p>
-                    <p className="text-sm font-semibold text-gray-800 mt-0.5">{university.city}, {university.country}</p>
-                  </div>
-                </div>
-              )}
-
-              {university.established && (
-                <div className="flex items-start gap-3">
-                  <Calendar size={16} className="text-[var(--accent)] mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Established</p>
-                    <p className="text-sm font-semibold text-gray-800 mt-0.5">{university.established}</p>
-                  </div>
-                </div>
-              )}
-
-              {university.type && (
-                <div className="flex items-start gap-3">
-                  <Building2 size={16} className="text-[var(--accent)] mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Type</p>
-                    <p className="text-sm font-semibold text-gray-800 mt-0.5">{university.type}</p>
-                  </div>
-                </div>
-              )}
-
-              {university.ranking && (
-                <div className="flex items-start gap-3">
-                  <Award size={16} className="text-[var(--accent)] mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Ranking</p>
-                    <p className="text-sm font-semibold text-gray-800 mt-0.5">{university.ranking}</p>
-                  </div>
-                </div>
-              )}
-
-              {university.offerLetter && (
-                <div className="flex items-center gap-2.5 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <FileCheck size={16} className="text-emerald-600 shrink-0" />
-                  <span className="text-sm font-semibold text-emerald-700">Offer Letter Available</span>
-                </div>
-              )}
-            </div>
-
-            {/* Contact */}
+          {/* Sidebar (1/3) */}
+          <aside className="space-y-5 lg:sticky lg:top-[160px] self-start">
+            {/* Contact card */}
             {(university.website || university.email || university.phone) && (
-              <div className="card p-5 space-y-3 anim-slide-right">
-                <h3 className="text-base font-bold text-[var(--primary)] border-b border-[var(--border)] pb-3">
-                  Contact
-                </h3>
+              <div className="card p-5 space-y-3">
+                <h3 className="text-base font-bold text-[var(--primary)] border-b border-gray-100 pb-3">Contact</h3>
                 {university.website && (
-                  <a
-                    href={university.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-[var(--accent)] hover:underline font-medium"
-                  >
+                  <a href={university.website} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-[var(--accent)] hover:underline font-medium">
                     <Globe size={14} /> Official Website <ExternalLink size={11} />
                   </a>
                 )}
                 {university.email && (
-                  <a
-                    href={`mailto:${university.email}`}
-                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--accent)]"
-                  >
+                  <a href={`mailto:${university.email}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--accent)]">
                     <Mail size={14} /> {university.email}
                   </a>
                 )}
                 {university.phone && (
-                  <a
-                    href={`tel:${university.phone}`}
-                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--accent)]"
-                  >
+                  <a href={`tel:${university.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--accent)]">
                     <Phone size={14} /> {university.phone}
                   </a>
                 )}
               </div>
             )}
 
+            {university.offerLetter && (
+              <div className="flex items-center gap-2.5 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                <FileCheck size={16} className="text-emerald-600 shrink-0" />
+                <span className="text-sm font-semibold text-emerald-700">Offer Letter Available</span>
+              </div>
+            )}
+
             {/* CTA */}
-            <div className="rounded-2xl p-6 bg-gradient-to-br from-[var(--accent)] to-[var(--accent-dark)] text-white text-center shadow-lg anim-zoom">
+            <div className="rounded-2xl p-6 text-white text-center shadow-lg"
+              style={{ background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%)" }}>
               <GraduationCap size={32} className="mx-auto mb-3 opacity-90" />
-              <h3 className="text-lg font-bold mb-1">Interested?</h3>
+              <h3 className="text-lg font-bold mb-1 text-white">Interested?</h3>
               <p className="text-sm text-white/80 mb-4">
                 Get free consultation about studying at {university.shortName || university.name}.
               </p>
-              <Link
-                href="/contact"
-                className="block w-full py-3 rounded-xl bg-white text-[var(--accent)]
-                           font-bold text-sm hover:bg-white/90 active:scale-95
-                           transition-all duration-200 shadow-sm"
-              >
+              <Link href="/contact"
+                className="block w-full py-3 rounded-xl bg-white text-[var(--accent)] font-bold text-sm hover:bg-white/90 transition-all shadow-sm">
                 Apply Now
               </Link>
             </div>

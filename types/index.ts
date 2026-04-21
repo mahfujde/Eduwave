@@ -145,6 +145,7 @@ export interface CmsSection {
   ctaSecondaryUrl?: string;
   channelHandle?: string;  // for youtube sections
   channelId?: string;      // resolved YouTube channel ID
+  textAlign?: "left" | "center" | "right" | "justify";
 }
 
 export interface CmsSectionItem {

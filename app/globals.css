@@ -53,6 +53,15 @@
   img {
     @apply max-w-full h-auto;
   }
+
+  /* FIX: All paragraphs justified */
+  p {
+    text-align: justify;
+  }
+  /* Exception: centered containers, footer, stats, badges */
+  .text-center p, footer p, .badge p, .stat p {
+    text-align: center;
+  }
 }
 
 /* ─── Component Styles ───────────────────────────────────── */
@@ -348,14 +357,116 @@
   color: var(--primary);
 }
 
-/* ─── Text Justification ────────────────────────────────── */
+/* ─── Text Justification (Global) ────────────────────────── */
 .prose-eduwave p,
 .section p,
-.card p {
+.card p,
+main p,
+article p,
+.container-custom p {
   text-align: justify;
 }
+/* Headings and CTAs should stay centered */
+.section h1, .section h2, .section h3,
+main h1, main h2, main h3,
+.text-center p { text-align: inherit; }
 
-/* ─── Scroll-Triggered Animations ────────────────────────── */
+/* ─── Dark Card / Dark Background Contrast Fix ──────────── */
+/* FIX: All text inside dark-card containers forced to light colors */
+.dark-card,
+.dark-card h1, .dark-card h2, .dark-card h3, .dark-card h4,
+.dark-card p, .dark-card span, .dark-card li, .dark-card label {
+  color: inherit;
+}
+.dark-card { color: #F1F5F9; }
+.dark-card h1, .dark-card h2, .dark-card h3 { color: #FFFFFF; }
+.dark-card .text-muted { color: rgba(255,255,255,0.6); }
+
+/* FIX: Explicit dark background class — apply to any section with a dark gradient bg */
+.dark-gradient-bg h1, .dark-gradient-bg h2, .dark-gradient-bg h3,
+.dark-gradient-bg h4, .dark-gradient-bg h5 {
+  color: #FFFFFF !important;
+}
+
+/* Scroll-triggered animations */
+.anim-hidden {
+  opacity: 0;
+  transform: translateY(2rem);
+}
+.anim-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.anim-scale-hidden {
+  opacity: 0;
+  transform: scale(0.95);
+}
+.anim-scale-visible {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.anim-slide-left-hidden {
+  opacity: 0;
+  transform: translateX(-2rem);
+}
+.anim-slide-left-visible {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.anim-slide-right-hidden {
+  opacity: 0;
+  transform: translateX(2rem);
+}
+.anim-slide-right-visible {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+/* FIX: Navbar active link indicator */
+.nav-link-active {
+  color: var(--accent) !important;
+  position: relative;
+}
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+/* ─── Scroll-Triggered Animations (IntersectionObserver) ──── */
+/* Base: all anim-init elements start invisible */
+.anim-init {
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+/* Type-specific starting positions */
+[data-anim="fade-up"].anim-init    { transform: translateY(32px); }
+[data-anim="fade-down"].anim-init  { transform: translateY(-32px); }
+[data-anim="slide-left"].anim-init { transform: translateX(-48px); }
+[data-anim="slide-right"].anim-init{ transform: translateX(48px); }
+[data-anim="zoom"].anim-init       { transform: scale(0.9); }
+[data-anim="fade"].anim-init       { transform: none; }
+
+/* Revealed state — all types converge */
+.anim-visible {
+  opacity: 1 !important;
+  transform: translateY(0) translateX(0) scale(1) !important;
+}
+
+/* Legacy support for any remaining anim-hidden usage */
 .anim-hidden {
   opacity: 0;
   transform: translateY(40px);
@@ -367,41 +478,15 @@
   transform: translateY(0);
 }
 
-.anim-slide-left {
-  opacity: 0;
-  transform: translateX(-60px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .anim-init,
+  .anim-hidden {
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
-.anim-slide-left.anim-show {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.anim-slide-right {
-  opacity: 0;
-  transform: translateX(60px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.anim-slide-right.anim-show {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.anim-zoom {
-  opacity: 0;
-  transform: scale(0.85);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.anim-zoom.anim-show {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* Stagger children */
-.anim-stagger > * { transition-delay: calc(var(--i, 0) * 100ms); }
 
 /* ─── Logo Carousel Infinite Scroll ──────────────────────── */
 @keyframes scrollLogos {
@@ -455,4 +540,21 @@
 }
 .copy-toast {
   animation: toastSlideUp 0.3s ease-out forwards;
+}
+
+/* FIX: Hide scrollbar for carousel smooth scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* FIX: Line clamp for testimonial card quotes */
+.line-clamp-5 {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

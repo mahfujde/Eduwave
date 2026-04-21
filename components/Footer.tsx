@@ -118,15 +118,14 @@ export default function Footer() {
             </a>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links — FIX: aligned without floating arrow */}
           <div>
             <h4 className="text-lg font-semibold text-white mb-4">Quick Links</h4>
             <ul className="space-y-2.5">
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href}
-                    className="text-sm text-blue-100/70 hover:text-[var(--accent)] transition-colors flex items-center gap-1 group">
-                    <ArrowUpRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+                    className="text-sm text-blue-100/70 hover:text-[var(--accent)] hover:pl-1 transition-all duration-200 block">
                     {link.label}
                   </Link>
                 </li>

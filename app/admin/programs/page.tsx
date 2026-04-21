@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAdminPrograms, useAdminUniversities, useCreateMutation, useUpdateMutation, useDeleteMutation } from "@/hooks/useData";
 import { useForm, useFieldArray } from "react-hook-form";
 import type { Program } from "@/types";
 import { generateSlug, safeJsonParse } from "@/lib/utils";
 import { PROGRAM_LEVELS, PROGRAM_MODES } from "@/constants/site";
-import { Plus, Edit2, Trash2, Loader2, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, X, Search } from "lucide-react";
 import DeleteModal from "@/components/admin/DeleteModal";
 
 export default function AdminProgramsPage() {
@@ -20,6 +20,19 @@ export default function AdminProgramsPage() {
   const [editing, setEditing] = useState<Program | null>(null);
   const [step, setStep] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [search, setSearch] = useState("");
+
+  // FIX: Search/filter programs
+  const filtered = useMemo(() => {
+    if (!programs) return [];
+    if (!search.trim()) return programs;
+    const q = search.toLowerCase();
+    return programs.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.university?.name?.toLowerCase().includes(q) ||
+      p.department?.toLowerCase().includes(q)
+    );
+  }, [programs, search]);
 
   const { register, handleSubmit, reset, control, setValue, watch } = useForm<any>({
     defaultValues: {
@@ -37,7 +50,7 @@ export default function AdminProgramsPage() {
     setEditing(null);
     setStep(1);
     reset({
-      name: "", slug: "", universityId: "", level: "Bachelor", duration: "", language: "English",
+      name: "", slug: "", universityId: "", department: "General", level: "Bachelor", duration: "", language: "English",
       intake: "", mode: "Full-time", description: "", requirements: "",
       englishReq: "", classType: "Physical", qualification: "",
       fees: [{ label: "", amount: "", currency: "MYR" }],
@@ -103,6 +116,25 @@ export default function AdminProgramsPage() {
         <button onClick={openCreate} className="btn-primary"><Plus size={18} /> Add Program</button>
       </div>
 
+      {/* FIX: Search Bar */}
+      <div className="card p-4">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search programs by name, university, or department..."
+            className="input-field !pl-10"
+          />
+        </div>
+        {search && (
+          <p className="text-xs text-gray-400 mt-2">
+            Showing {filtered.length} of {programs?.length || 0} programs
+          </p>
+        )}
+      </div>
+
       {/* Multi-step Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto p-4">
@@ -135,6 +167,23 @@ export default function AdminProgramsPage() {
                       <select {...register("universityId")} className="input-field">
                         <option value="">Select university</option>
                         {universities?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                      <select {...register("department")} className="input-field">
+                        <option value="General">General</option>
+                        <option value="Computer Science & IT">Computer Science & IT</option>
+                        <option value="Business & Management">Business & Management</option>
+                        <option value="Engineering & Applied Sciences">Engineering & Applied Sciences</option>
+                        <option value="Health & Medicine">Health & Medicine</option>
+                        <option value="Arts & Design">Arts & Design</option>
+                        <option value="Social Sciences">Social Sciences</option>
+                        <option value="Natural Sciences">Natural Sciences</option>
+                        <option value="Education & Teaching">Education & Teaching</option>
+                        <option value="Hospitality & Tourism">Hospitality & Tourism</option>
+                        <option value="Law">Law</option>
+                        <option value="Architecture & Built Environment">Architecture & Built Environment</option>
                       </select>
                     </div>
                     <div>
@@ -184,25 +233,76 @@ export default function AdminProgramsPage() {
                 </>
               )}
 
-              {/* Step 2: Fees */}
+              {/* Step 2: Fees — FIX: separate Tuition + Other Fees */}
               {step === 2 && (
                 <>
-                  <h3 className="font-semibold text-[var(--primary)]">Fee Structure</h3>
+                  {/* Tuition Fees */}
+                  <h3 className="font-semibold text-[var(--primary)]">Yearly Tuition Fees</h3>
                   <div className="space-y-3">
-                    {feeFields.map((field, idx) => (
-                      <div key={field.id} className="flex gap-2 items-center">
-                        <input {...register(`fees.${idx}.label`)} className="input-field flex-1" placeholder="Fee label" />
-                        <input {...register(`fees.${idx}.amount`)} className="input-field w-40" placeholder="RM 25,000" />
-                        {feeFields.length > 1 && (
+                    {feeFields.map((field, idx) => {
+                      const feeType = watch(`fees.${idx}.type`);
+                      if (feeType === "other") return null;
+                      return (
+                        <div key={field.id} className="flex gap-2 items-center">
+                          <input type="hidden" {...register(`fees.${idx}.type`)} value="tuition" />
+                          <input {...register(`fees.${idx}.label`)} className="input-field flex-1" placeholder="e.g. 1st Year" />
+                          <input {...register(`fees.${idx}.amount`)} className="input-field w-44" placeholder="e.g. 25000"
+                            onBlur={(e) => {
+                              const num = e.target.value.replace(/[^0-9.]/g, "");
+                              if (num) setValue(`fees.${idx}.amount`, `MYR ${Number(num).toLocaleString()}`);
+                            }}
+                          />
+                          {feeFields.filter((_, i) => watch(`fees.${i}.type`) !== "other").length > 1 && (
+                            <button type="button" onClick={() => removeFee(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <button type="button" onClick={() => addFee({ label: "", amount: "", currency: "MYR", type: "tuition" })}
+                      className="text-sm text-[var(--accent)] font-medium hover:underline">
+                      + Add Tuition Fee Row
+                    </button>
+                  </div>
+
+                  {/* Other Fees */}
+                  <h3 className="font-semibold text-[var(--primary)] mt-6 pt-6 border-t">Other Fees</h3>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {["Security Bond", "Registration Fee", "FMGS", "Visa & Insurance", "Library Deposit", "Medical Insurance", "Student ID"].map((sug) => {
+                      const alreadyAdded = feeFields.some((_, i) => watch(`fees.${i}.label`) === sug && watch(`fees.${i}.type`) === "other");
+                      return (
+                        <button key={sug} type="button" disabled={alreadyAdded}
+                          onClick={() => addFee({ label: sug, amount: "", currency: "MYR", type: "other" })}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition-all ${alreadyAdded ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-600 border-gray-200 hover:border-[var(--accent)] hover:text-[var(--accent)]"}`}>
+                          + {sug}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="space-y-3">
+                    {feeFields.map((field, idx) => {
+                      const feeType = watch(`fees.${idx}.type`);
+                      if (feeType !== "other") return null;
+                      return (
+                        <div key={field.id} className="flex gap-2 items-center">
+                          <input type="hidden" {...register(`fees.${idx}.type`)} value="other" />
+                          <input {...register(`fees.${idx}.label`)} className="input-field flex-1" placeholder="Fee name" />
+                          <input {...register(`fees.${idx}.amount`)} className="input-field w-44" placeholder="e.g. 3500"
+                            onBlur={(e) => {
+                              const num = e.target.value.replace(/[^0-9.]/g, "");
+                              if (num) setValue(`fees.${idx}.amount`, `MYR ${Number(num).toLocaleString()}`);
+                            }}
+                          />
                           <button type="button" onClick={() => removeFee(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                             <Trash2 size={14} />
                           </button>
-                        )}
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => addFee({ label: "", amount: "", currency: "MYR" })}
+                        </div>
+                      );
+                    })}
+                    <button type="button" onClick={() => addFee({ label: "", amount: "", currency: "MYR", type: "other" })}
                       className="text-sm text-[var(--accent)] font-medium hover:underline">
-                      + Add Fee Row
+                      + Add Other Fee Row
                     </button>
                   </div>
                   <div className="flex justify-between pt-4">
@@ -314,16 +414,18 @@ export default function AdminProgramsPage() {
                 <tr>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Program</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">University</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Department</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Level</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Duration</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {programs?.map((prog) => (
+                {filtered?.map((prog) => (
                   <tr key={prog.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-800">{prog.name}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{prog.university?.name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{prog.department || "General"}</td>
                     <td className="px-4 py-3 text-center"><span className="badge bg-blue-100 text-blue-800">{prog.level}</span></td>
                     <td className="px-4 py-3 text-center text-sm text-gray-600">{prog.duration}</td>
                     <td className="px-4 py-3">

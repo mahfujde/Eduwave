@@ -92,13 +92,28 @@ function SectionBlock({ section, index, total, onChange, onDelete, onMove }: {
             <input value={section.title ?? ""} onChange={e => up("title", e.target.value)} className="input-field" placeholder="e.g. Why Choose Us" />
           </div>
 
-          {/* Subtitle for most section types */}
-          {["hero","text","team","stats","faq","gallery","youtube"].includes(section.type) && (
-            <div>
-              <Label>Subtitle / Tag Line</Label>
-              <input value={section.subtitle ?? ""} onChange={e => up("subtitle", e.target.value)} className="input-field" placeholder="e.g. Our Leadership" />
+          {/* Subtitle for all section types */}
+          <div>
+            <Label>Subtitle / Tag Line</Label>
+            <input value={section.subtitle ?? ""} onChange={e => up("subtitle", e.target.value)} className="input-field" placeholder="e.g. Our Leadership" />
+          </div>
+
+          {/* Text Alignment — always visible */}
+          <div>
+            <Label>Text Alignment</Label>
+            <div className="flex gap-2">
+              {["left", "center", "right", "justify"].map(a => (
+                <button key={a} type="button" onClick={() => up("textAlign", a)}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium border transition-all ${
+                    (section as any).textAlign === a || (!((section as any).textAlign) && a === "center")
+                      ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}>
+                  {a.charAt(0).toUpperCase() + a.slice(1)}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* ── HERO ── */}
           {section.type === "hero" && (
@@ -145,8 +160,10 @@ function SectionBlock({ section, index, total, onChange, onDelete, onMove }: {
             <>
               <div><Label>Body Text</Label><textarea value={section.content ?? ""} onChange={e => up("content", e.target.value)} rows={3} className="input-field resize-none" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Button Text</Label><input value={section.ctaText ?? ""} onChange={e => up("ctaText", e.target.value)} className="input-field" /></div>
-                <div><Label>Button URL</Label><input value={section.ctaUrl ?? ""} onChange={e => up("ctaUrl", e.target.value)} className="input-field" /></div>
+                <div><Label>Primary Button Text</Label><input value={section.ctaText ?? ""} onChange={e => up("ctaText", e.target.value)} className="input-field" /></div>
+                <div><Label>Primary Button URL</Label><input value={section.ctaUrl ?? ""} onChange={e => up("ctaUrl", e.target.value)} className="input-field" /></div>
+                <div><Label>Secondary Button Text</Label><input value={section.ctaSecondaryText ?? ""} onChange={e => up("ctaSecondaryText", e.target.value)} className="input-field" placeholder="e.g. WhatsApp 24/7" /></div>
+                <div><Label>Secondary Button URL</Label><input value={section.ctaSecondaryUrl ?? ""} onChange={e => up("ctaSecondaryUrl", e.target.value)} className="input-field" placeholder="https://wa.me/..." /></div>
               </div>
             </>
           )}
@@ -299,6 +316,11 @@ function SectionBlock({ section, index, total, onChange, onDelete, onMove }: {
                 <button onClick={() => addItem({ linkUrl: "", title: "" })} className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"><Plus size={15} /> Add Video Link</button>
               </div>
             </>
+          )}
+
+          {/* ── TESTIMONIALS ── */}
+          {section.type === "testimonials" && (
+            <div><Label>Section Description</Label><textarea value={section.content ?? ""} onChange={e => up("content", e.target.value)} rows={2} className="input-field resize-none" placeholder="Testimonials are loaded from the Testimonials section in Admin." /></div>
           )}
 
           {/* Common: styling */}

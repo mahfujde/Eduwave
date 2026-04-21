@@ -234,6 +234,7 @@ model Program {
   slug            String   @unique
   universityId    String   @map("university_id")
   university      University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  department      String?  @default("General")  // FIX: explicit department for grouping
   level           String   @default("Bachelor")
   duration        String?
   language        String?  @default("English")

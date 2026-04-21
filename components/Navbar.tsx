@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation"; // FIX: active nav state
 import { useSession, signOut } from "next-auth/react";
 import { NAV_LINKS } from "@/constants/site";
 
@@ -20,6 +21,7 @@ export default function Navbar() {
   const [userMenu, setUserMenu] = useState(false);
   const { settings, fetchSettings } = useSiteStore();
   const { data: session, status } = useSession();
+  const pathname = usePathname(); // FIX: track current path for active state
 
   // Parse dynamic nav links from settings, fallback to constants
   const dynamicNav: { label: string; href: string }[] = (() => {
@@ -72,12 +74,21 @@ export default function Navbar() {
 
           {/* ── Desktop nav links ── */}
           <div className="hidden lg:flex items-center gap-0.5">
-            {dynamicNav.map((link) => (
-              <Link key={link.href} href={link.href}
-                className="px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-all duration-200">
-                {link.label}
-              </Link>
-            ))}
+            {dynamicNav.map((link) => {
+              // FIX: determine active state — exact match for home, startsWith for others
+              const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+              return (
+                <Link key={link.href} href={link.href}
+                  className={cn(
+                    "px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                    isActive
+                      ? "nav-link-active text-[var(--accent)] bg-[var(--accent)]/5"
+                      : "text-gray-700 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5"
+                  )}>
+                  {link.label}
+                </Link>
+              );
+            })}
             {/* Track Application — highlighted */}
             <Link href="/track"
               className="px-3 py-2 text-sm font-medium text-[var(--accent)] rounded-lg hover:bg-[var(--accent)]/10 flex items-center gap-1.5 transition-all duration-200">
@@ -148,12 +159,20 @@ export default function Navbar() {
         open ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
       )}>
         <div className="container-custom py-4 space-y-1">
-          {dynamicNav.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setOpen(false)}
-              className="block px-4 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-[var(--accent)]/5 hover:text-[var(--accent)] transition-colors">
-              {link.label}
-            </Link>
-          ))}
+          {dynamicNav.map((link) => {
+            const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+            return (
+              <Link key={link.href} href={link.href} onClick={() => setOpen(false)}
+                className={cn(
+                  "block px-4 py-3 text-base font-medium rounded-lg transition-colors",
+                  isActive
+                    ? "text-[var(--accent)] bg-[var(--accent)]/5 font-semibold"
+                    : "text-gray-700 hover:bg-[var(--accent)]/5 hover:text-[var(--accent)]"
+                )}>
+                {link.label}
+              </Link>
+            );
+          })}
           {/* Track Application */}
           <Link href="/track" onClick={() => setOpen(false)}
             className="flex items-center gap-2 px-4 py-3 text-base font-medium text-[var(--accent)] rounded-lg hover:bg-[var(--accent)]/5 transition-colors">

@@ -4,6 +4,44 @@ import { useEffect, useState } from "react";
 import type { CmsSection } from "@/types";
 import Link from "next/link";
 import YouTubeSection from "@/components/YouTubeSection";
+import TestimonialsCarousel from "@/components/TestimonialsCarousel";
+import TestimonialCard from "@/components/TestimonialCard";
+
+/** Testimonials section that fetches from API and renders carousel */
+function TestimonialsRenderer({ section: s }: { section: CmsSection }) {
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  useEffect(() => {
+    fetch("/api/public/testimonials")
+      .then(r => r.json())
+      .then(d => { if (d.success && d.data?.length) setTestimonials(d.data); })
+      .catch(() => {});
+  }, []);
+
+  const display = testimonials.length > 0 ? testimonials : (s.items ?? []).map((it: any) => ({
+    id: it.id, name: it.title, quote: it.content, university: it.subtitle,
+    photo: it.imageUrl, rating: 5,
+  }));
+
+  return (
+    <section className="section" style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 100%)" }}>
+      <div className="container-custom">
+        <div className="text-center mb-12" data-anim="fade-up">
+          {s.subtitle && <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-[var(--accent)] text-sm font-semibold mb-4">{s.subtitle}</span>}
+          {s.title && <h2 className="text-white">{s.title}</h2>}
+          {s.content && <p className="mt-4 text-blue-100/60 max-w-xl mx-auto">{s.content}</p>}
+        </div>
+        {display.length > 0 && <TestimonialsCarousel testimonials={display.slice(0, 8)} />}
+        {display.length > 8 && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {display.slice(8).map((t: any) => (
+              <div key={t.id}><TestimonialCard testimonial={t} /></div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 const PADDING: Record<string, string> = {
   none:   "py-0",
@@ -34,19 +72,27 @@ function renderSection(s: CmsSection, idx: number) {
     ...(s.textColor && { color: s.textColor }),
   };
 
+  const align = (s as any).textAlign ?? "justify";
+  const alignCls = align === "center" ? "text-center" : align === "left" ? "text-left" : align === "right" ? "text-right" : "text-justify";
+
   switch (s.type) {
     case "hero":
       return (
-        <section key={s.id ?? idx} className={`relative ${py} px-6 overflow-hidden`}
-          style={{ ...style, backgroundImage: s.imageUrl ? `url(${s.imageUrl})` : "linear-gradient(135deg,#0F1B3F 0%,#1A2B5F 100%)", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <section key={s.id ?? idx} className={`relative min-h-[80vh] flex items-center ${py} px-6 overflow-hidden`}
+          style={{ ...style, backgroundImage: s.imageUrl ? `url(${s.imageUrl})` : "linear-gradient(135deg,#0F1B3F 0%,#1A2B5F 40%,#2A3B6F 100%)", backgroundSize: "cover", backgroundPosition: "center" }}>
           {s.imageUrl && <div className="absolute inset-0 bg-black/50" />}
-          <div className="relative z-10 max-w-4xl mx-auto text-center text-white">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-white/[0.03] animate-float" />
+            <div className="absolute bottom-1/4 left-1/3 w-[300px] h-[300px] rounded-full bg-[var(--accent)]/[0.05]" style={{ animation: "float 4s ease-in-out infinite reverse" }} />
+          </div>
+          <div className="relative z-10 max-w-4xl mx-auto text-center text-white w-full" data-anim="fade-up">
             {s.subtitle && <p className="text-sm font-semibold uppercase tracking-widest text-white/60 mb-3">{s.subtitle}</p>}
-            {s.title   && <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">{s.title}</h1>}
-            {s.content && <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">{s.content}</p>}
-            <div className="flex flex-wrap gap-3 justify-center">
-              {s.ctaText          && <Link href={s.ctaUrl ?? "#"}          className="btn-primary">{s.ctaText}</Link>}
-              {s.ctaSecondaryText && <Link href={s.ctaSecondaryUrl ?? "#"} className="px-6 py-3 border border-white/40 text-white rounded-xl hover:bg-white/10 text-sm font-medium">{s.ctaSecondaryText}</Link>}
+            {s.title   && <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 leading-tight text-white">{s.title}</h1>}
+            {s.content && <p className="text-lg md:text-xl text-blue-100/70 mb-8 max-w-2xl mx-auto leading-relaxed">{s.content}</p>}
+            <div className="flex flex-wrap gap-4 justify-center">
+              {s.ctaText          && <Link href={s.ctaUrl ?? "#"}          className="btn-primary text-base !px-8 !py-4">{s.ctaText}</Link>}
+              {s.ctaSecondaryText && <Link href={s.ctaSecondaryUrl ?? "#"} className="inline-flex items-center gap-2 px-8 py-4 font-semibold rounded-lg border-2 border-white/20 text-white hover:bg-white/10 transition-all">{s.ctaSecondaryText}</Link>}
             </div>
           </div>
         </section>
@@ -54,11 +100,11 @@ function renderSection(s: CmsSection, idx: number) {
 
     case "text":
       return (
-        <section key={s.id ?? idx} className={`${py} px-6`} style={style}>
+        <section key={s.id ?? idx} className={`${py} px-6`} style={style} data-anim="fade-up">
           <div className="max-w-3xl mx-auto text-center">
             {s.subtitle && <p className="text-sm font-semibold uppercase tracking-widest text-[var(--accent)] mb-3">{s.subtitle}</p>}
             {s.title    && <h2 className="text-3xl md:text-4xl font-bold text-[var(--primary)] mb-5">{s.title}</h2>}
-            {s.content  && <div className="text-lg text-gray-600 leading-relaxed whitespace-pre-wrap">{s.content}</div>}
+            {s.content  && <div className={`text-lg text-gray-700 leading-relaxed whitespace-pre-wrap ${alignCls}`}>{s.content}</div>}
           </div>
         </section>
       );
@@ -101,16 +147,18 @@ function renderSection(s: CmsSection, idx: number) {
       return (
         <section key={s.id ?? idx} className={`${py} px-6`} style={style}>
           <div className="max-w-6xl mx-auto">
-            {s.subtitle && <p className="text-center text-sm font-semibold uppercase tracking-widest text-[var(--accent)] mb-3">{s.subtitle}</p>}
-            {s.title    && <h2 className="text-3xl md:text-4xl font-bold text-center text-[var(--primary)] mb-4">{s.title}</h2>}
-            {s.content  && <p className="text-center text-gray-500 mb-10 max-w-2xl mx-auto">{s.content}</p>}
-            <div className={`grid ${gridClass} gap-6`}>
+            <div className="text-center mb-10" data-anim="fade-up">
+              {s.subtitle && <p className="text-sm font-semibold uppercase tracking-widest text-[var(--accent)] mb-3">{s.subtitle}</p>}
+              {s.title    && <h2 className="text-3xl md:text-4xl font-bold text-[var(--primary)] mb-4">{s.title}</h2>}
+              {s.content  && <p className={`text-gray-600 max-w-2xl mx-auto ${alignCls}`}>{s.content}</p>}
+            </div>
+            <div className={`grid ${gridClass} gap-6`} data-anim-stagger="fade-up">
               {(s.items ?? []).map((item: any, i: number) => (
-                <div key={item.id ?? i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all">
-                  {item.icon     && <div className="text-3xl mb-3">{item.icon}</div>}
+                <div key={item.id ?? i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                  {item.icon     && <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-2xl mb-3">{item.icon}</div>}
                   {item.imageUrl && <img src={item.imageUrl} alt={item.title ?? ""} className="rounded-xl mb-4 w-full h-40 object-cover" />}
                   {item.title    && <h3 className="font-bold text-[var(--primary)] mb-2">{item.title}</h3>}
-                  {item.content  && <p className="text-gray-500 text-sm leading-relaxed">{item.content}</p>}
+                  {item.content  && <p className={`text-gray-600 text-sm leading-relaxed ${alignCls}`}>{item.content}</p>}
                   {item.linkUrl  && <Link href={item.linkUrl} className="mt-3 inline-block text-[var(--accent)] text-sm font-medium hover:underline">Learn more →</Link>}
                 </div>
               ))}
@@ -159,12 +207,14 @@ function renderSection(s: CmsSection, idx: number) {
       return (
         <section key={s.id ?? idx} className={`${py} px-6`} style={style}>
           <div className="max-w-5xl mx-auto">
-            {s.subtitle && <p className="text-center text-sm font-semibold uppercase tracking-widest text-[var(--accent)] mb-3">{s.subtitle}</p>}
-            {s.title    && <h2 className="text-3xl font-bold text-center text-[var(--primary)] mb-4">{s.title}</h2>}
-            {s.content  && <p className="text-center text-gray-500 mb-10 max-w-xl mx-auto">{s.content}</p>}
-            <div className={`grid ${gridClass} gap-6`}>
+            <div className="text-center mb-10" data-anim="fade-up">
+              {s.subtitle && <p className="text-sm font-semibold uppercase tracking-widest text-[var(--accent)] mb-3">{s.subtitle}</p>}
+              {s.title    && <h2 className="text-3xl font-bold text-[var(--primary)] mb-4">{s.title}</h2>}
+              {s.content  && <p className="text-gray-600 max-w-xl mx-auto">{s.content}</p>}
+            </div>
+            <div className={`grid ${gridClass} gap-6`} data-anim-stagger="fade-up">
               {(s.items ?? []).map((item: any, i: number) => (
-                <div key={item.id ?? i} className="text-center p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all">
+                <div key={item.id ?? i} className="text-center p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                   {item.icon && <div className="text-3xl mb-2">{item.icon}</div>}
                   {item.title   && <p className="text-3xl font-extrabold text-[var(--primary)]">{item.title}</p>}
                   {item.content && <p className="text-sm text-gray-500 mt-1">{item.content}</p>}
@@ -218,14 +268,20 @@ function renderSection(s: CmsSection, idx: number) {
 
     case "cta":
       return (
-        <section key={s.id ?? idx} className={`${py} px-6`}
-          style={{ ...style, background: style.backgroundColor ? undefined : "linear-gradient(135deg,#E8622A,#D04E18)" }}>
-          <div className="max-w-2xl mx-auto text-center">
-            {s.title   && <h2 className="text-3xl font-bold text-white mb-4">{s.title}</h2>}
-            {s.content && <p className="text-white/80 mb-8">{s.content}</p>}
-            <div className="flex flex-wrap gap-3 justify-center">
-              {s.ctaText          && <Link href={s.ctaUrl ?? "#"}          className="inline-block px-8 py-4 bg-white text-[var(--accent)] font-bold rounded-2xl hover:shadow-xl hover:-translate-y-1 transition-all">{s.ctaText}</Link>}
-              {s.ctaSecondaryText && <Link href={s.ctaSecondaryUrl ?? "#"} className="inline-block px-8 py-4 border border-white/40 text-white font-medium rounded-2xl hover:bg-white/10 transition-all">{s.ctaSecondaryText}</Link>}
+        <section key={s.id ?? idx} className={`${py} px-6 bg-white`}>
+          <div className="container-custom">
+            <div className="relative overflow-hidden rounded-3xl p-10 md:p-16 text-center" data-anim="zoom"
+              style={{ background: style.backgroundColor ?? "linear-gradient(135deg, #1A2B5F 0%, #0F1B3F 100%)" }}>
+              <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[var(--accent)]/10 -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/2" />
+              <div className="relative z-10">
+                {s.title   && <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">{s.title}</h2>}
+                {s.content && <p className="text-blue-100/70 text-lg max-w-xl mx-auto mb-8">{s.content}</p>}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  {s.ctaText          && <Link href={s.ctaUrl ?? "#"}          className="btn-primary text-base !px-10 !py-4">{s.ctaText}</Link>}
+                  {s.ctaSecondaryText && <Link href={s.ctaSecondaryUrl ?? "#"} className="inline-flex items-center gap-2 px-10 py-4 rounded-lg border-2 border-white/20 text-white font-semibold hover:bg-white/10 transition-all">{s.ctaSecondaryText}</Link>}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -243,6 +299,9 @@ function renderSection(s: CmsSection, idx: number) {
           items={(s.items ?? []).map(i => ({ id: i.id, title: i.title, linkUrl: i.linkUrl }))}
         />
       );
+
+    case "testimonials":
+      return <TestimonialsRenderer key={s.id ?? idx} section={s} />;
 
     default:
       return null;
