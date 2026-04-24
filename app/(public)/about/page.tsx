@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useTestimonials } from "@/hooks/useData";
 import TestimonialCard from "@/components/TestimonialCard";
+import { fetchCmsPage, alignClass } from "@/lib/cms-utils";
+import type { CmsSection } from "@/types";
 import {
   MapPin, Clock, Shield, Heart, ArrowRight, Users,
   GraduationCap, Globe, Award, Star,
@@ -13,22 +15,20 @@ import {
 export default function AboutPage() {
   const { data: testimonials } = useTestimonials();
 
-  // FIX: Fetch CMS about page sections directly for leadership photos
+  // Unified CMS fetch for all about page sections
+  const [cms, setCms] = useState<Record<string, CmsSection>>({});
   const [leadershipItems, setLeadershipItems] = useState<any[]>([]);
   useEffect(() => {
-    fetch("/api/public/pages?slug=about")
-      .then(r => r.json())
-      .then(res => {
-        if (res.success && res.data?.sections) {
-          try {
-            const sections = typeof res.data.sections === "string" ? JSON.parse(res.data.sections) : res.data.sections;
-            const teamSection = sections.find((s: any) => s.id === "about-team" || s.type === "team");
-            if (teamSection?.items) setLeadershipItems(teamSection.items);
-          } catch {}
-        }
-      })
-      .catch(() => {});
+    fetchCmsPage("about").then(({ byId }) => {
+      setCms(byId);
+      if (byId["about-team"]?.items) setLeadershipItems(byId["about-team"].items);
+    });
   }, []);
+  const c = (id: string, field: string, fallback: string) => {
+    const sec = cms[id];
+    return sec && (sec as any)[field] ? (sec as any)[field] : fallback;
+  };
+  const cmsAlign = (id: string) => alignClass(cms[id]?.textAlign);
 
   const differences = [
     { icon: MapPin, title: "Malaysia-Based, Not Remote", desc: "We operate directly from Malaysia. No middlemen. No delays. Your application is handled by a team that lives and works in the country you are going to." },
@@ -66,13 +66,13 @@ export default function AboutPage() {
           <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-white/[0.03] animate-float" />
           <div className="absolute bottom-1/3 left-1/4 w-[250px] h-[250px] rounded-full bg-[var(--accent)]/[0.05]" style={{ animation: "float 5s ease-in-out infinite reverse" }} />
         </div>
-        <div className="container-custom relative z-10 text-center" data-anim="fade-up">
+        <div className={`container-custom relative z-10 ${cmsAlign("about-hero")}`} data-anim="fade-up">
           <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-[var(--accent)] text-sm font-semibold mb-4">
-            About Eduwave
+            {c("about-hero", "subtitle", "About Eduwave")}
           </span>
-          <h1 className="text-white text-4xl md:text-5xl font-extrabold">We Are More Than a Consultancy</h1>
+          <h1 className="text-white text-4xl md:text-5xl font-extrabold">{c("about-hero", "title", "We Are More Than a Consultancy")}</h1>
           <p className="mt-4 text-blue-100/70 text-lg max-w-2xl mx-auto">
-            We are your local guardian in Malaysia — from the moment you reach out until long after you settle into student life.
+            {c("about-hero", "content", "We are your local guardian in Malaysia — from the moment you reach out until long after you settle into student life.")}
           </p>
         </div>
       </section>
@@ -83,8 +83,8 @@ export default function AboutPage() {
           <div className="max-w-4xl mx-auto" data-anim="fade-up">
             <div className="grid md:grid-cols-2 gap-10 items-start">
               <div>
-                <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-semibold mb-3">Est. 2022</span>
-                <h2 className="text-[var(--primary)] mb-6">Our Story</h2>
+                <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-semibold mb-3">{c("about-story", "subtitle", "Est. 2022")}</span>
+                <h2 className="text-[var(--primary)] mb-6">{c("about-story", "title", "Our Story")}</h2>
                 <p className="text-gray-600 leading-relaxed mb-4 text-justify">
                   Eduwave Educational Consultancy was born from a belief that every Bangladeshi student deserves
                   access to world-class education, completely honest guidance, and real support from people who
@@ -163,8 +163,8 @@ export default function AboutPage() {
       {/* Why Different */}
       <section className="section bg-white">
         <div className="container-custom">
-          <div className="text-center mb-12" data-anim="fade-up">
-            <h2 className="text-[var(--primary)]">Why We Are Different</h2>
+          <div className={`${cmsAlign("about-diff")} mb-12`} data-anim="fade-up">
+            <h2 className="text-[var(--primary)]">{c("about-diff", "title", "Why We Are Different")}</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto" data-anim-stagger="fade-up">
             {differences.map((d) => (
@@ -188,14 +188,13 @@ export default function AboutPage() {
       {/* Leadership — uses CMS photos with fallback to initials */}
       <section className="dark-gradient-bg section" style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 100%)" }}>
         <div className="container-custom">
-          <div className="text-center mb-12" data-anim="fade-up">
+          <div className={`${cmsAlign("about-team")} mb-12`} data-anim="fade-up">
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-[var(--accent)] text-sm font-semibold mb-4">
-              Our Leadership
+              {c("about-team", "subtitle", "Our Leadership")}
             </span>
-            <h2 className="text-white">Built by People Who Lived the Journey</h2>
+            <h2 className="text-white">{c("about-team", "title", "Built by People Who Lived the Journey")}</h2>
             <p className="mt-4 text-blue-100/60 max-w-2xl mx-auto">
-              Eduwave was not built in a boardroom. It was built by people who lived the journey, understood
-              the struggle, and decided to do something about it.
+              {c("about-team", "content", "Eduwave was not built in a boardroom. It was built by people who lived the journey, understood the struggle, and decided to do something about it.")}
             </p>
           </div>
 
@@ -244,12 +243,12 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="py-16 bg-gradient-to-r from-[var(--accent)] to-[#D04E18]">
         <div className="container-custom text-center">
-          <h2 className="text-white text-3xl font-extrabold mb-4">Ready to Start Your Journey?</h2>
+          <h2 className="text-white text-3xl font-extrabold mb-4">{c("about-cta", "title", "Ready to Start Your Journey?")}</h2>
           <p className="text-white/80 mb-8 max-w-xl mx-auto">
-            Get in touch with our Malaysia-based team today. Free, honest guidance — 24/7.
+            {c("about-cta", "content", "Get in touch with our Malaysia-based team today. Free, honest guidance — 24/7.")}
           </p>
-          <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[var(--accent)] font-bold rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            Contact Us Now <ArrowRight size={18} />
+          <Link href={c("about-cta", "ctaUrl", "/contact")} className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[var(--accent)] font-bold rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            {c("about-cta", "ctaText", "Contact Us Now")} <ArrowRight size={18} />
           </Link>
         </div>
       </section>

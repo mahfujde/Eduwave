@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSiteStore } from "@/hooks/useStore";
 import { useUniversities } from "@/hooks/useData";
 import InquiryForm from "@/components/InquiryForm";
+import { fetchCmsPage, alignClass } from "@/lib/cms-utils";
+import type { CmsSection } from "@/types";
 import { MapPin, Mail, Phone, Clock, MessageCircle, ExternalLink, Headphones } from "lucide-react";
 import { getWhatsAppUrl } from "@/lib/utils";
 
@@ -32,6 +34,13 @@ export default function ContactPage() {
 
   useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
+  // CMS fetch
+  const [cms, setCms] = useState<Record<string, CmsSection>>({});
+  useEffect(() => { fetchCmsPage("contact").then(({ byId }) => setCms(byId)); }, []);
+  const c = (id: string, field: string, fallback: string) => {
+    const sec = cms[id]; return sec && (sec as any)[field] ? (sec as any)[field] : fallback;
+  };
+
   return (
     <>
 
@@ -48,13 +57,11 @@ export default function ContactPage() {
           <div className={`transition-all duration-1000 ${heroAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 mb-4">
               <Headphones size={14} className="text-[var(--accent)]" />
-              <span className="text-sm text-white/90">24/7 Virtual Counselling from Malaysia</span>
+              <span className="text-sm text-white/90">{c("ct-hero", "subtitle", "24/7 Virtual Counselling from Malaysia")}</span>
             </div>
-            <h1 className="text-white text-4xl md:text-5xl font-extrabold">Contact Us</h1>
+            <h1 className="text-white text-4xl md:text-5xl font-extrabold">{c("ct-hero", "title", "Contact Us")}</h1>
             <p className="mt-4 text-blue-100/70 text-lg max-w-2xl mx-auto">
-              Ready to take the first step? We are already here waiting for you. Reach out and one of our
-              Malaysia-based counsellors will respond promptly with honest, practical guidance. No pressure.
-              No obligation. Just real answers from people who genuinely want to help you succeed.
+              {c("ct-hero", "content", "Ready to take the first step? We are already here waiting for you. Reach out and one of our Malaysia-based counsellors will respond promptly with honest, practical guidance. No pressure. No obligation. Just real answers from people who genuinely want to help you succeed.")}
             </p>
           </div>
         </div>

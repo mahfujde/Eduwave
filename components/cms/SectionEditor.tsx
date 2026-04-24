@@ -66,10 +66,11 @@ function SectionBlock({ section, index, total, onChange, onDelete, onMove }: {
     <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
       <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200">
         <GripVertical size={16} className="text-gray-300 cursor-grab shrink-0" />
-        <button onClick={() => setOpen(o => !o)} className="flex-1 flex items-center gap-2 text-left">
+        <button onClick={() => setOpen(o => !o)} className="flex-1 flex items-center gap-2 text-left flex-wrap">
           <span className="text-base">{typeInfo?.icon ?? "📄"}</span>
           <span className="font-medium text-gray-800 text-sm">{section.title || typeInfo?.label || section.type}</span>
           <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{section.type}</span>
+          {section.id && <span className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded font-mono">ID: {section.id}</span>}
         </button>
         <div className="flex items-center gap-1 shrink-0">
           <button onClick={() => up("visible", !section.visible)} className={`p-1.5 rounded-lg ${section.visible ? "text-green-600 hover:bg-green-50" : "text-gray-400 hover:bg-gray-100"}`}>

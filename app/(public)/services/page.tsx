@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { fetchCmsPage, alignClass } from "@/lib/cms-utils";
+import type { CmsSection } from "@/types";
 import {
   GraduationCap, FileCheck, Shield, Plane, Home, HeartHandshake,
   Award, Stethoscope, BookOpen, Globe, Headphones, Users,
@@ -95,6 +97,14 @@ export default function ServicesPage() {
   const teamAnim = useInView(0.1);
   const ctaAnim = useInView(0.1);
 
+  // CMS fetch
+  const [cms, setCms] = useState<Record<string, CmsSection>>({});
+  useEffect(() => { fetchCmsPage("services").then(({ byId }) => setCms(byId)); }, []);
+  const c = (id: string, field: string, fallback: string) => {
+    const sec = cms[id]; return sec && (sec as any)[field] ? (sec as any)[field] : fallback;
+  };
+  const cmsAlign = (id: string) => alignClass(cms[id]?.textAlign);
+
   return (
     <>
       {/* Hero */}
@@ -109,11 +119,11 @@ export default function ServicesPage() {
         <div className="container-custom relative z-10 text-center">
           <div className={`transition-all duration-1000 ${heroAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-[var(--accent)] text-sm font-semibold mb-4">
-              100% Free of Charge
+              {c("svc-hero", "subtitle", "100% Free of Charge")}
             </span>
-            <h1 className="text-white text-4xl md:text-5xl font-extrabold">Our Complimentary Services</h1>
+            <h1 className="text-white text-4xl md:text-5xl font-extrabold">{c("svc-hero", "title", "Our Complimentary Services")}</h1>
             <p className="mt-4 text-blue-100/70 text-lg max-w-2xl mx-auto">
-              Most consultancies complete the paperwork and call it a day. We are built differently.
+              {c("svc-hero", "content", "Most consultancies complete the paperwork and call it a day. We are built differently.")}
             </p>
           </div>
         </div>
@@ -220,17 +230,17 @@ export default function ServicesPage() {
       <section ref={ctaAnim.ref} className="py-16 bg-gradient-to-r from-[var(--accent)] to-[#D04E18]">
         <div className="container-custom text-center">
           <div className={`transition-all duration-800 ${ctaAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <h2 className="text-white text-3xl font-extrabold mb-4">All These Services. Zero Cost. Always.</h2>
+            <h2 className="text-white text-3xl font-extrabold mb-4">{c("svc-cta", "title", "All These Services. Zero Cost. Always.")}</h2>
             <p className="text-white/80 mb-8 max-w-xl mx-auto">
-              Ready to take the first step? Reach out and get free, honest guidance from our Malaysia-based team.
+              {c("svc-cta", "content", "Ready to take the first step? Reach out and get free, honest guidance from our Malaysia-based team.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[var(--accent)] font-bold rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                Send My Free Inquiry <ArrowRight size={18} />
+              <Link href={c("svc-cta", "ctaUrl", "/contact")} className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[var(--accent)] font-bold rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                {c("svc-cta", "ctaText", "Send My Free Inquiry")} <ArrowRight size={18} />
               </Link>
-              <a href="https://wa.me/601124103692" target="_blank" rel="noopener noreferrer"
+              <a href={c("svc-cta", "ctaSecondaryUrl", "https://wa.me/601124103692")} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-all">
-                <MessageCircle size={18} /> WhatsApp 24/7
+                <MessageCircle size={18} /> {c("svc-cta", "ctaSecondaryText", "WhatsApp 24/7")}
               </a>
             </div>
           </div>
