@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import {
-  Users, Plus, Edit2, Trash2, X, Loader2, Check, Eye,
+  Users, Plus, Edit2, Trash2, X, Loader2, Check, Eye, EyeOff,
   MessageSquare, User, GraduationCap, Phone, Mail,
   MapPin, Calendar, BookOpen, Award, Send, ChevronDown,
 } from "lucide-react";
@@ -224,6 +224,7 @@ export default function AdminUsersPage() {
   const [filter,    setFilter]    = useState<string>("ALL");
   const [search,    setSearch]    = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, reset } = useForm<any>();
 
   const fetchUsers = async () => {
@@ -235,13 +236,17 @@ export default function AdminUsersPage() {
   };
   useEffect(() => { fetchUsers(); }, []);
 
-  const openCreate = () => { setEditing(null); reset({ role:"STUDENT", isApproved:true, isActive:true }); setShowForm(true); };
-  const openEdit   = (u: any) => { setEditing(u); reset(u); setShowForm(true); };
+  const openCreate = () => { setEditing(null); reset({ role:"STUDENT", isApproved:true, isActive:true }); setShowPassword(false); setShowForm(true); };
+  const openEdit   = (u: any) => { setEditing(u); reset(u); setShowPassword(false); setShowForm(true); };
 
   const onSubmit = async (data: any) => {
     setSaving(true);
+    // Clean empty agentCode to null to avoid unique constraint violations
+    if (!data.agentCode || data.agentCode.trim() === "") {
+      data.agentCode = null;
+    }
     if (editing) {
-      await fetch(`/api/admin/users?id=${editing.id}`, { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(data) });
+      await fetch("/api/admin/users", { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ ...data, id: editing.id }) });
     } else {
       await fetch("/api/admin/users", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(data) });
     }
@@ -400,7 +405,13 @@ export default function AdminUsersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {editing ? "New Password (leave blank to keep)" : "Password *"}
                 </label>
-                <input {...register("password")} type="password" className="input-field"/>
+                <div className="relative">
+                  <input {...register("password")} type={showPassword ? "text" : "password"} className="input-field !pr-10" placeholder="••••••••"/>
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                    {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>

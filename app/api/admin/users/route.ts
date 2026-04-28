@@ -32,10 +32,14 @@ export async function PUT(req: Request) {
     const body = await req.json();
     const { id, ...data } = body;
     if (!id) return NextResponse.json({ success: false }, { status: 400 });
-    if (data.password) {
+    if (data.password && data.password.trim() !== "") {
       data.password = await bcrypt.hash(data.password, 12);
     } else {
       delete data.password;
+    }
+    // Clean empty agentCode to null to prevent unique constraint violations
+    if (data.agentCode !== undefined && (!data.agentCode || data.agentCode.trim() === "")) {
+      data.agentCode = null;
     }
     const user = await prisma.user.update({
       where: { id },
@@ -56,13 +60,24 @@ export async function POST(req: Request) {
     const body = await req.json();
     if (!body.email || !body.password) return NextResponse.json({ success: false, message: "Email and password required" }, { status: 400 });
     body.password = await bcrypt.hash(body.password, 12);
+    // Clean empty agentCode to null to prevent unique constraint violations
+    if (!body.agentCode || body.agentCode.trim() === "") {
+      body.agentCode = null;
+    }
+    // Clean empty optional fields
+    if (!body.phone || body.phone.trim() === "") body.phone = null;
+    if (!body.name || body.name.trim() === "") body.name = "";
     const user = await prisma.user.create({
       data: body,
       select: { id: true, email: true, name: true, role: true, phone: true, isApproved: true, isActive: true, agentCode: true, referredBy: true, createdAt: true },
     });
     return NextResponse.json({ success: true, data: user });
   } catch (error: any) {
-    if (error?.code === "P2002") return NextResponse.json({ success: false, message: "Email already exists" }, { status: 409 });
+    console.error("Create user error:", error);
+    if (error?.code === "P2002") {
+      const field = error?.meta?.target?.[0] || "email";
+      return NextResponse.json({ success: false, message: `A user with this ${field} already exists` }, { status: 409 });
+    }
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
 }

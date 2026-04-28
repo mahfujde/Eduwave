@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { Loader2, User, Mail, Lock, Phone, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, User, Mail, Lock, Phone, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 const schema = z.object({
   name:      z.string().min(2, "Full name required"),
@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [success, setSuccess] = useState(false);
   const [error, setError]     = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -91,7 +92,11 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
-                <input {...register("password")} type="password" placeholder="Min. 8 characters" className="input-field !pl-10"/>
+                <input {...register("password")} type={showPassword ? "text" : "password"} placeholder="Min. 8 characters" className="input-field !pl-10 !pr-10"/>
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
+                </button>
               </div>
               {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
             </div>
