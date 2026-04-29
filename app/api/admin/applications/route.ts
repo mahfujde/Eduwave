@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isStaff } from "@/lib/rbac";
+import { sendEmail, buildApplicationStatusEmail } from "@/lib/nodemailer";
 
 export async function GET(req: Request) {
   try {
@@ -57,9 +58,37 @@ export async function PATCH(req: Request) {
         ...(body.status     !== undefined && { status: body.status }),
         ...(body.adminNotes !== undefined && { adminNotes: body.adminNotes }),
       },
+      include: {
+        student:    { select: { name: true, email: true } },
+        university: { select: { name: true } },
+        program:    { select: { name: true } },
+      },
     });
+
+    // Send email notification to student when status changes
+    if (body.status && updated.student?.email) {
+      try {
+        const html = buildApplicationStatusEmail({
+          studentName: updated.student.name,
+          trackingNumber: updated.trackingNumber,
+          universityName: updated.university?.name || updated.universityName || "University",
+          programName: updated.program?.name || updated.programName || "Program",
+          status: body.status,
+          message: body.adminNotes || undefined,
+        });
+        await sendEmail({
+          to: updated.student.email,
+          subject: `📋 Application Update — ${updated.trackingNumber} (${body.status.replace(/_/g, " ").toUpperCase()})`,
+          html,
+        });
+      } catch (emailErr) {
+        console.error("Failed to send status update email:", emailErr);
+      }
+    }
+
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
   }
 }
+

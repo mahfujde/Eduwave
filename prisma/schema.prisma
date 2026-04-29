@@ -32,6 +32,7 @@ model User {
   agentApplications Application[]         @relation("AgentApplications")
   sentMessages     ApplicationMessage[]
   agentApplication AgentApplication?
+  agentCommissions Commission[]           @relation("AgentCommissions")
 
   @@map("users")
 }
@@ -82,8 +83,45 @@ model Application {
 
   messages  ApplicationMessage[]
   documents ApplicationDocument[]
+  commission Commission?
 
   @@map("applications")
+}
+
+// ─── Commission ─────────────────────────────────────────────
+// Flow: pending → claimed → approved → paid
+model Commission {
+  id              String   @id @default(cuid())
+  applicationId   String   @unique @map("application_id")
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  agentId         String   @map("agent_id")
+  agent           User     @relation("AgentCommissions", fields: [agentId], references: [id])
+  amount          Float?   // set by admin (e.g. 500.00 MYR)
+  currency        String   @default("MYR")
+  status          String   @default("pending") // pending | claimed | approved | paid | rejected
+  claimedAt       DateTime? @map("claimed_at")
+  approvedAt      DateTime? @map("approved_at")
+  paidAt          DateTime? @map("paid_at")
+  receiptUrl      String?  @map("receipt_url")
+  adminNotes      String?  @map("admin_notes") @db.Text
+  agentNotes      String?  @map("agent_notes") @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("commissions")
+}
+
+// ─── Admin Notification (Dashboard) ─────────────────────────
+model AdminNotification {
+  id          String   @id @default(cuid())
+  title       String
+  message     String   @db.Text
+  type        String   @default("info") // info | agent_student | commission_claim
+  linkUrl     String?  @map("link_url")
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now())
+
+  @@map("admin_notifications")
 }
 
 // ─── Application Messages ────────────────────────────────────

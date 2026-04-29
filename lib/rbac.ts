@@ -30,6 +30,10 @@ export const PERMISSIONS = {
   VIEW_AGENT_DASH:    ["AGENT"],
   VIEW_REFERRED:      ["AGENT"],
 
+  // Commissions
+  MANAGE_COMMISSIONS: ["SUPER_ADMIN", "ADMIN"],
+  VIEW_COMMISSIONS:   ["SUPER_ADMIN", "ADMIN", "AGENT"],
+
   // Content
   MANAGE_CONTENT:     ["SUPER_ADMIN", "ADMIN", "EDITOR"],
   MANAGE_UNIVERSITIES:["SUPER_ADMIN", "ADMIN", "EDITOR"],
@@ -104,6 +108,7 @@ export function getAdminNavForRole(role: string) {
     { href: "/admin/users",          label: "Users",          icon: "Users",           roles: ["SUPER_ADMIN","ADMIN"] },
     { href: "/admin/students",       label: "Students",       icon: "GraduationCap",   roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/agents",         label: "Agents",         icon: "Handshake",       roles: ["SUPER_ADMIN","ADMIN"] },
+    { href: "/admin/commissions",    label: "Commissions",    icon: "Wallet",          roles: ["SUPER_ADMIN","ADMIN"] },
     { href: "/admin/universities",   label: "Universities",   icon: "Building2",       roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/programs",       label: "Programs",       icon: "GraduationCap",   roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },
     { href: "/admin/inquiries",      label: "Inquiries",      icon: "MessageSquare",   roles: ["SUPER_ADMIN","ADMIN","EDITOR"] },

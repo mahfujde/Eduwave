@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTestimonials } from "@/hooks/useData";
 import TestimonialCard from "@/components/TestimonialCard";
 import { fetchCmsPage, alignClass } from "@/lib/cms-utils";
 import type { CmsSection } from "@/types";
 import {
   MapPin, Clock, Shield, Heart, ArrowRight, Users,
-  GraduationCap, Globe, Award, Star,
+  GraduationCap, Globe, Star, ChevronLeft, ChevronRight as ChevronRightIcon,
+  ExternalLink,
 } from "lucide-react";
+
+const LinkedinIcon = ({ size = 14, className = "" }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065a2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+);
 
 export default function AboutPage() {
   const { data: testimonials } = useTestimonials();
@@ -39,8 +45,8 @@ export default function AboutPage() {
 
   // Hardcoded leadership fallback
   const defaultLeaders = [
-    { id: "t1", title: "Md. Nayem Uddin", subtitle: "Founder & Managing Director", initials: "MN", gradient: "from-[var(--accent)] to-[#F5733B]", content: "As the Founder and Managing Director, Md. Nayem Uddin has turned a deeply personal understanding of what Bangladeshi students face into a company that has guided over 350+ students to universities across Malaysia. Currently pursuing his Master\u2019s of Information Technology in Malaysia, Nayem brings academic depth, real-world expertise, and an unshakeable commitment to transparency. He is also the heartbeat behind one of the largest Bangladeshi student communities in Malaysia." },
-    { id: "t2", title: "Md. Nazim Uddin, PhD", subtitle: "General Manager", initials: "MN", gradient: "from-[var(--primary-light)] to-[var(--primary)]", content: "Md. Nazim Uddin serves as General Manager with a PhD and specialized expertise in counselling, student motivation, and visa processing. With over a decade of experience in education, he is the operational backbone of Eduwave. Dr. Nazim has a rare combination of deep expertise and genuine empathy — making complex processes feel simple and anxious students feel heard. Every case is a personal responsibility." },
+    { id: "t1", title: "Md. Nayem Uddin", subtitle: "Founder & Managing Director", initials: "MN", gradient: "from-[var(--accent)] to-[#F5733B]", content: "Nayem Uddin, Founder and Managing Director of Eduwave Educational Consultancy, brings hands on experience built through years of direct involvement in international student recruitment and university admissions across Malaysia. A graduate of Lincoln University College Malaysia with a Bachelor of Information Technology, he combines strong academic knowledge with practical understanding of the challenges Bangladeshi students face when studying abroad. Since founding Eduwave, Nayem has developed the consultancy into a trusted name in Malaysian education services, building partnerships with leading universities and personally guiding the successful placement of more than 350 students. His approach focuses on complete end to end support, including university selection, application processing, visa documentation, EMGS activation, accommodation guidance, and post arrival assistance, all provided with zero consultancy fees. What makes him unique is his strong connection with the student community he serves. As the administrator of the Bangladeshi Students in Malaysia Facebook group with over 13,000 active members, Nayem created one of the most important digital platforms for Bangladeshi students in Malaysia, a space where students share experiences, find guidance, and support one another. This initiative reflects his understanding that student success extends beyond placement. It includes community, access to information, and genuine human support." },
+    { id: "t2", title: "Md. Nazim Uddin, PhD", subtitle: "General Manager", initials: "MN", gradient: "from-[var(--primary-light)] to-[var(--primary)]", content: "Nazim Uddin serves as General Manager at Eduwave Educational Consultancy, bringing over a decade of experience in the education sector along with an MBA and a PhD to his role. His academic foundation, combined with specialized training in counseling, coaching, and student motivation, gives him a deep and practical understanding of the challenges students face when pursuing education abroad. At Eduwave, Nazim plays a central role in guiding students through every stage of their academic journey, from initial counseling to university placement. His approach is grounded in empathy, patience, and genuine commitment to student success, qualities that have earned him strong trust among both students and university partners alike. Beyond his advisory work, Nazim has contributed to the broader education community through articles and research on student engagement, educational technology, and teacher development, and has presented his work at academic forums. His communication skills and collaborative mindset make him a key bridge between Eduwave and its growing network of partner universities. His leadership style reflects a belief that good education consulting is not about transactions. It is about truly understanding each student's potential, their family's concerns, and their long term goals, and then doing everything possible to help them succeed." },
   ];
 
   // Merge CMS image data into leadership
@@ -52,8 +58,26 @@ export default function AboutPage() {
       title: cmsItem?.title || leader.title,
       subtitle: cmsItem?.subtitle || leader.subtitle,
       content: cmsItem?.content || leader.content,
+      linkUrl: cmsItem?.linkUrl || "",
     };
   });
+
+  // ── Leadership Carousel State ──
+  const [currentLeader, setCurrentLeader] = useState(0);
+
+  const goTo = useCallback((idx: number) => {
+    setCurrentLeader(idx);
+  }, []);
+
+  const prev = () => goTo(currentLeader === 0 ? leaders.length - 1 : currentLeader - 1);
+  const next = () => goTo(currentLeader === leaders.length - 1 ? 0 : currentLeader + 1);
+
+  // Auto-advance every 8 seconds
+  useEffect(() => {
+    if (leaders.length <= 1) return;
+    const timer = setInterval(next, 8000);
+    return () => clearInterval(timer);
+  }, [currentLeader, leaders.length]);
 
   return (
     <>
@@ -185,7 +209,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Leadership — uses CMS photos with fallback to initials */}
+      {/* ── Leadership Carousel ── */}
       <section className="dark-gradient-bg section" style={{ background: "linear-gradient(135deg, #0F1B3F 0%, #1A2B5F 100%)" }}>
         <div className="container-custom">
           <div className={`${cmsAlign("about-team")} mb-12`} data-anim="fade-up">
@@ -198,31 +222,94 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto" data-anim-stagger="fade-up">
-            {leaders.map((leader) => (
-              <div key={leader.id}
-                className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-500">
-                {/* Show uploaded photo or fallback to initials circle */}
-                {leader.imageUrl ? (
-                  <div className="w-24 h-24 rounded-full overflow-hidden mb-5 border-2 border-white/20">
-                    {/* Use native img — Next.js Image fails on dynamically uploaded CMS paths */}
-                    <img src={leader.imageUrl} alt={leader.title} className="w-full h-full object-cover" />
+          {/* Carousel */}
+          <div className="relative max-w-3xl mx-auto" data-anim="fade-up">
+            {/* Navigation Arrows */}
+            {leaders.length > 1 && (
+              <>
+                <button onClick={prev} aria-label="Previous leader"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-14 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur flex items-center justify-center text-white transition-all duration-300 hover:scale-110">
+                  <ChevronLeft size={22} />
+                </button>
+                <button onClick={next} aria-label="Next leader"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-14 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur flex items-center justify-center text-white transition-all duration-300 hover:scale-110">
+                  <ChevronRightIcon size={22} />
+                </button>
+              </>
+            )}
+
+            {/* Slide */}
+            <div className="overflow-hidden rounded-2xl">
+              {leaders.map((leader, idx) => (
+                <div
+                  key={leader.id}
+                  className={`transition-all duration-700 ease-in-out ${idx === currentLeader ? "block animate-carousel-in" : "hidden"}`}
+                >
+                  <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8 md:p-10">
+                    {/* Photo LEFT + Name/Designation/LinkedIn RIGHT */}
+                    <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+                      {/* Photo - Left */}
+                      {leader.imageUrl ? (
+                        <div className="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-4 border-white/20 shrink-0 shadow-2xl">
+                          <img src={leader.imageUrl} alt={leader.title} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className={`w-48 h-48 md:w-56 md:h-56 rounded-full bg-gradient-to-br ${leader.gradient} flex items-center justify-center text-white text-5xl font-bold shrink-0 shadow-2xl`}>
+                          {leader.initials}
+                        </div>
+                      )}
+                      {/* Name, Designation, LinkedIn - Right */}
+                      <div className="text-center md:text-left flex-1">
+                        <h3 className="text-white text-2xl md:text-3xl font-bold leading-tight">{leader.title}</h3>
+                        <p className="text-[var(--accent)] text-base font-semibold mt-2">{leader.subtitle}</p>
+                        {leader.linkUrl && (
+                          <a href={leader.linkUrl} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all duration-300 border border-white/10">
+                            <LinkedinIcon size={16} className="text-[#0A66C2]" />
+                            LinkedIn Profile
+                            <ExternalLink size={12} className="text-white/50" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    {/* Bio - Full width below */}
+                    <p className="text-blue-100/70 text-sm leading-relaxed text-justify max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
+                      {leader.content}
+                    </p>
                   </div>
-                ) : (
-                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${leader.gradient} flex items-center justify-center mb-5 text-white text-2xl font-bold`}>
-                    {leader.initials}
-                  </div>
-                )}
-                <h3 className="text-white text-xl font-bold">{leader.title}</h3>
-                <p className="text-[var(--accent)] text-sm font-semibold mb-4">{leader.subtitle}</p>
-                <p className="text-blue-100/70 text-sm leading-relaxed text-justify">{leader.content}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Dots */}
+            {leaders.length > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-6">
+                {leaders.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goTo(idx)}
+                    aria-label={`Go to leader ${idx + 1}`}
+                    className={`transition-all duration-300 rounded-full ${
+                      idx === currentLeader
+                        ? "w-8 h-3 bg-[var(--accent)]"
+                        : "w-3 h-3 bg-white/20 hover:bg-white/40"
+                    }`}
+                  />
+                ))}
               </div>
-            ))}
+            )}
+
+            {/* Counter */}
+            {leaders.length > 1 && (
+              <p className="text-center text-xs text-blue-100/40 mt-3">
+                {currentLeader + 1} / {leaders.length}
+              </p>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Testimonials — FIX: uses data-anim-stagger instead of broken useInView */}
+      {/* Testimonials */}
       {testimonials && testimonials.length > 0 && (
         <section className="section bg-white">
           <div className="container-custom">
@@ -252,6 +339,18 @@ export default function AboutPage() {
           </Link>
         </div>
       </section>
+
+      {/* Carousel animation */}
+      <style jsx>{`
+        @keyframes carousel-in {
+          from { opacity: 0; transform: translateX(40px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        .animate-carousel-in { animation: carousel-in 0.6s ease-out; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+      `}</style>
     </>
   );
 }

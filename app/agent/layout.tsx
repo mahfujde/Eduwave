@@ -4,12 +4,14 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LayoutDashboard, Users, Menu, X, ChevronRight, Handshake, LogOut, BookOpen, User } from "lucide-react";
+import { LayoutDashboard, Users, Menu, X, ChevronRight, Handshake, LogOut, BookOpen, User, UserPlus, Wallet } from "lucide-react";
 
 const navLinks = [
-  { href: "/agent/dashboard", label: "Dashboard",        icon: LayoutDashboard },
-  { href: "/agent/students",  label: "My Students",      icon: Users },
-  { href: "/agent/profile",   label: "My Profile",       icon: User },
+  { href: "/agent/dashboard",     label: "Dashboard",        icon: LayoutDashboard },
+  { href: "/agent/apply-student", label: "Apply for Student", icon: UserPlus },
+  { href: "/agent/students",      label: "My Students",      icon: Users },
+  { href: "/agent/commissions",   label: "My Commissions",   icon: Wallet },
+  { href: "/agent/profile",       label: "My Profile",       icon: User },
 ];
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {

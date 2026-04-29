@@ -3,22 +3,23 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Users, TrendingUp, CheckCircle2, Clock, ArrowRight, Copy, Check } from "lucide-react";
+import { Users, TrendingUp, CheckCircle2, Clock, ArrowRight, Copy, Check, Wallet, UserPlus, Banknote } from "lucide-react";
 import { getPublicStatusInfo } from "@/lib/tracking";
 
 export default function AgentDashboard() {
   const { data: session } = useSession();
   const [students, setStudents] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [copied, setCopied]     = useState(false);
 
   const agentCode = (session?.user as any)?.agentCode ?? "—";
 
   useEffect(() => {
-    fetch("/api/agent/students")
-      .then(r => r.json())
-      .then(d => { if (d.success) setStudents(d.data); })
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/agent/students").then(r => r.json()).then(d => { if (d.success) setStudents(d.data); }),
+      fetch("/api/agent/commissions").then(r => r.json()).then(d => { if (d.success) setCommissions(d.data); }),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const copyCode = () => {
@@ -30,6 +31,8 @@ export default function AgentDashboard() {
   const enrolled  = students.filter(s => s.status === "enrolled").length;
   const active    = students.filter(s => !["enrolled","rejected","withdrawn"].includes(s.status)).length;
   const pending   = students.filter(s => s.status === "submitted").length;
+  const totalEarned = commissions.filter(c => c.status === "paid").reduce((s: number, c: any) => s + (c.amount || 0), 0);
+  const pendingCommissions = commissions.filter(c => ["pending", "claimed", "approved"].includes(c.status)).length;
 
   return (
     <div className="space-y-8">
@@ -49,15 +52,29 @@ export default function AgentDashboard() {
             {copied ? <Check size={16} className="text-green-300" /> : <Copy size={16} className="text-white" />}
           </button>
         </div>
+
+        {/* Quick Actions */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/agent/apply-student"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 rounded-xl text-sm font-medium transition-colors">
+            <UserPlus size={14} /> Apply for Student
+          </Link>
+          <Link href="/agent/commissions"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 rounded-xl text-sm font-medium transition-colors">
+            <Wallet size={14} /> My Commissions
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
           { label: "Total Referred", value: students.length,  icon: Users,         col: "blue"   },
           { label: "Active Apps",    value: active,           icon: Clock,         col: "purple" },
           { label: "Enrolled",       value: enrolled,         icon: CheckCircle2,  col: "green"  },
           { label: "New (Pending)",  value: pending,          icon: TrendingUp,    col: "orange" },
+          { label: "Total Earned",   value: `MYR ${totalEarned.toFixed(0)}`, icon: Banknote, col: "green" },
+          { label: "Pending Claims", value: pendingCommissions, icon: Wallet, col: "yellow" },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
             <s.icon size={22} className="text-[var(--accent)] mb-3" />

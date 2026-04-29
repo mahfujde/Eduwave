@@ -9,14 +9,14 @@ import {
   LayoutDashboard, Building2, GraduationCap, MessageSquare,
   Quote, FileText, Settings, LogOut, Menu, X, ChevronRight,
   Users, Bell, Image, Layout, Search, Handshake, BookOpen,
-  Globe, ExternalLink, Palette,
+  Globe, ExternalLink, Palette, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, any> = {
   LayoutDashboard, Building2, GraduationCap, MessageSquare,
   Quote, FileText, Settings, Users, Bell, Image, Layout,
-  Search, Handshake, BookOpen, Globe, Palette,
+  Search, Handshake, BookOpen, Globe, Palette, Wallet,
 };
 
 // Group nav items for visual clarity
@@ -27,7 +27,7 @@ const NAV_GROUPS = [
   },
   {
     label: "Student & Agent Portals",
-    items: ["/admin/applications", "/admin/users", "/admin/students", "/admin/agents", "/admin/inquiries"],
+    items: ["/admin/applications", "/admin/users", "/admin/students", "/admin/agents", "/admin/commissions", "/admin/inquiries"],
   },
   {
     label: "Content",

@@ -49,7 +49,7 @@ export default function UniversitiesPage() {
         <div className="container-custom text-center relative z-10" data-anim="fade-up">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/80 text-sm font-medium mb-4">
             <GraduationCap size={15} />
-            Partner Institutions
+            Institutions We Work With
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
             University List
@@ -118,11 +118,10 @@ export default function UniversitiesPage() {
                   <button
                     key={p}
                     onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${
-                      page === p
-                        ? "bg-[var(--accent)] text-white shadow-md"
-                        : "border border-gray-200 text-gray-600 hover:bg-gray-50"
-                    }`}
+                    className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${page === p
+                      ? "bg-[var(--accent)] text-white shadow-md"
+                      : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
                   >
                     {p}
                   </button>

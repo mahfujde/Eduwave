@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Building2, GraduationCap, MessageSquare, Quote,
   FileText, Users, Bell, Image, Layout, Search, Settings, Handshake,
   ExternalLink, Plus, Eye, ArrowRight, TrendingUp, CheckCircle2,
-  Clock, AlertCircle, Globe, BookOpen, Loader2,
+  Clock, AlertCircle, Globe, BookOpen, Loader2, Wallet, UserPlus,
 } from "lucide-react";
 import { getAdminNavForRole } from "@/lib/rbac";
 
@@ -76,6 +76,8 @@ export default function AdminDashboard() {
   const [counts, setCounts]   = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [recent,  setRecent]  = useState<{ inquiries: any[]; applications: any[]; users: any[] }>({ inquiries: [], applications: [], users: [] });
+  const [adminNotifs, setAdminNotifs] = useState<any[]>([]);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
 
   useEffect(() => {
     const apis = [
@@ -110,6 +112,17 @@ export default function AdminDashboard() {
         setRecent({ inquiries: inqs, applications: apps, users: usrs });
       })
       .finally(() => setLoading(false));
+
+    // Fetch admin notifications
+    fetch("/api/admin/dashboard-notifications")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setAdminNotifs(d.data || []);
+          setUnreadNotifs(d.unreadCount || 0);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const newInquiries    = recent.inquiries.filter(i => i.status === "new").length;
@@ -162,6 +175,12 @@ export default function AdminDashboard() {
               <Handshake size={12} /> {pendingAgents} agent{pendingAgents!==1?"s":""} to review
             </Link>
           )}
+          {unreadNotifs > 0 && (
+            <Link href="/admin/commissions"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/20 rounded-lg text-xs font-medium">
+              <Wallet size={12} /> {unreadNotifs} new notification{unreadNotifs!==1?"s":""}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -204,6 +223,13 @@ export default function AdminDashboard() {
                   href="/admin/inquiries" badge={newInquiries}
                   desc="Contact form submissions"
                   actions={[{ label: "New Inquiries", href: "/admin/inquiries", icon: AlertCircle }]} />
+              )}
+              {hasSection("/admin/commissions") && (
+                <StatCard label="Commissions" value={unreadNotifs || "—"}
+                  icon={Wallet} color="from-yellow-500 to-yellow-700"
+                  href="/admin/commissions"
+                  desc="Agent commission payments"
+                  actions={[{ label: "Review Claims", href: "/admin/commissions", icon: Eye }]} />
               )}
             </div>
           </div>
@@ -348,6 +374,37 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+
+          {/* Agent Submissions Notifications */}
+          {adminNotifs.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="flex items-center justify-between p-5 border-b">
+                <h3 className="font-bold text-[var(--primary)] flex items-center gap-2">
+                  <UserPlus size={16} className="text-[var(--accent)]" /> Agent Submissions & Commission Alerts
+                </h3>
+                <button onClick={async () => {
+                  await fetch("/api/admin/dashboard-notifications?id=all", { method: "PATCH" });
+                  setAdminNotifs(prev => prev.map(n => ({ ...n, isRead: true })));
+                  setUnreadNotifs(0);
+                }} className="text-xs text-gray-400 hover:text-[var(--accent)]">
+                  Mark all read
+                </button>
+              </div>
+              <div className="divide-y max-h-64 overflow-y-auto">
+                {adminNotifs.slice(0, 10).map((n: any) => (
+                  <Link key={n.id} href={n.linkUrl || "/admin/applications"}
+                    className={`block px-5 py-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/50" : ""}`}>
+                    <div className="flex items-center gap-2">
+                      {!n.isRead && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />}
+                      <p className="text-sm font-medium text-gray-800">{n.title}</p>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
+                    <p className="text-xs text-gray-300 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── Quick Page Links ─────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

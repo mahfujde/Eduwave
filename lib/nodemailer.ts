@@ -243,3 +243,98 @@ export function buildApplicationStatusEmail(data: {
   `;
 }
 
+/** Build an email for admin when agent submits a student application */
+export function buildAgentStudentApplicationEmail(data: {
+  agentName: string;
+  agentCode: string;
+  studentName: string;
+  studentEmail: string;
+  universityName: string;
+  programName: string;
+  trackingNumber: string;
+}) {
+  return `
+    <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #0F1B3F, #1A2B5F); color: white; padding: 32px; border-radius: 12px 12px 0 0; text-align: center;">
+        <div style="width: 56px; height: 56px; background: #E8622A; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+          <span style="font-size: 24px; font-weight: 900; color: white;">E</span>
+        </div>
+        <h1 style="margin: 0; font-size: 22px; font-weight: 700;">🎓 New Student Application by Agent</h1>
+        <p style="margin: 8px 0 0; opacity: 0.8; font-size: 14px;">A new student has been submitted for review</p>
+      </div>
+      <div style="background: white; padding: 32px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb;">
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+          <p style="margin: 0 0 8px; font-size: 13px; color: #166534; font-weight: 600;">🤝 Agent Details</p>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <tr><td style="padding: 4px 0; color: #666;">Name:</td><td style="padding: 4px 0; font-weight: 600;">${data.agentName}</td></tr>
+            <tr><td style="padding: 4px 0; color: #666;">Agent Code:</td><td style="padding: 4px 0; font-weight: 600; font-family: monospace;">${data.agentCode}</td></tr>
+          </table>
+        </div>
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+          <p style="margin: 0 0 8px; font-size: 13px; color: #0369a1; font-weight: 600;">📋 Student Application</p>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <tr><td style="padding: 4px 0; color: #666;">Student:</td><td style="padding: 4px 0; font-weight: 600;">${data.studentName}</td></tr>
+            <tr><td style="padding: 4px 0; color: #666;">Email:</td><td style="padding: 4px 0;"><a href="mailto:${data.studentEmail}" style="color: #E8622A;">${data.studentEmail}</a></td></tr>
+            <tr><td style="padding: 4px 0; color: #666;">University:</td><td style="padding: 4px 0; font-weight: 600;">${data.universityName}</td></tr>
+            <tr><td style="padding: 4px 0; color: #666;">Program:</td><td style="padding: 4px 0; font-weight: 600;">${data.programName}</td></tr>
+            <tr><td style="padding: 4px 0; color: #666;">Tracking:</td><td style="padding: 4px 0; font-weight: 600; font-family: monospace; color: #0F1B5F;">${data.trackingNumber}</td></tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="https://theeduwave.com/admin/applications" style="display: inline-block; background: linear-gradient(135deg, #E8622A, #D04E18); color: white; text-decoration: none; padding: 14px 36px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+            Review Application →
+          </a>
+        </div>
+        <p style="color: #9ca3af; font-size: 12px; margin: 16px 0 0; text-align: center;">This application requires commission setup. Visit the Commissions page to set the amount.</p>
+      </div>
+    </div>
+  `;
+}
+
+/** Build commission payment confirmation email for agent */
+export function buildCommissionPaymentEmail(data: {
+  agentName: string;
+  amount: number;
+  currency: string;
+  trackingNumber: string;
+  studentName: string;
+  universityName: string;
+  receiptUrl?: string;
+}) {
+  return `
+    <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #166534, #15803d); color: white; padding: 32px; border-radius: 12px 12px 0 0; text-align: center;">
+        <div style="width: 56px; height: 56px; background: #fbbf24; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+          <span style="font-size: 24px;">💰</span>
+        </div>
+        <h1 style="margin: 0; font-size: 22px; font-weight: 700;">Commission Payment Processed!</h1>
+        <p style="margin: 8px 0 0; opacity: 0.8; font-size: 14px;">Your commission has been paid</p>
+      </div>
+      <div style="background: white; padding: 32px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb;">
+        <p style="color: #374151; font-size: 15px; margin: 0 0 16px;">Hi <strong>${data.agentName}</strong>,</p>
+        <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 20px;">
+          Great news! Your commission payment has been processed and sent to you. Here are the details:
+        </p>
+        <div style="background: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 12px; padding: 24px; text-align: center; margin: 20px 0;">
+          <p style="margin: 0 0 4px; font-size: 13px; color: #166534;">Payment Amount</p>
+          <p style="margin: 0; font-size: 32px; font-weight: 800; color: #166534;">${data.currency} ${data.amount.toFixed(2)}</p>
+          <p style="margin: 8px 0 0; font-size: 12px; color: #22c55e;">✅ PAID</p>
+        </div>
+        <table style="width: 100%; font-size: 14px; border-collapse: collapse; margin: 16px 0;">
+          <tr><td style="padding: 8px 0; color: #888;">Tracking #:</td><td style="padding: 8px 0; font-weight: 600; font-family: monospace;">${data.trackingNumber}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888;">Student:</td><td style="padding: 8px 0; font-weight: 600;">${data.studentName}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888;">University:</td><td style="padding: 8px 0; font-weight: 600;">${data.universityName}</td></tr>
+        </table>
+        ${data.receiptUrl ? `
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${data.receiptUrl}" style="display: inline-block; background: #059669; color: white; text-decoration: none; padding: 12px 32px; border-radius: 10px; font-weight: 600; font-size: 14px;">📄 View Payment Receipt</a>
+        </div>
+        ` : ""}
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="https://theeduwave.com/agent/commissions" style="display: inline-block; background: linear-gradient(135deg, #E8622A, #D04E18); color: white; text-decoration: none; padding: 12px 32px; border-radius: 10px; font-weight: 600; font-size: 14px;">View Your Commissions →</a>
+        </div>
+        <p style="color: #9ca3af; font-size: 12px; margin: 16px 0 0; text-align: center;">Thank you for being a valued Eduwave agent! Keep referring students to earn more commissions.</p>
+      </div>
+    </div>
+  `;
+}
