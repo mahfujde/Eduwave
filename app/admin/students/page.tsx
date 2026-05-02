@@ -6,6 +6,7 @@ import {
   MapPin, Calendar, BookOpen, Award, FileText, User,
   MessageSquare, Send, ExternalLink, Filter, Trash2, Download,
 } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
 
 const APP_STATUS_STYLES: Record<string,string> = {
   submitted:        "bg-orange-100 text-orange-600",
@@ -22,6 +23,7 @@ const APP_STATUS_STYLES: Record<string,string> = {
 function StudentDetailModal({ student, onClose }: { student: any; onClose: () => void }) {
   const [profile, setProfile]           = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
+  const toast = useToast();
   const [loading, setLoading]           = useState(true);
   const [tab, setTab]                   = useState<"profile"|"applications"|"message">("profile");
   const [newMsg, setNewMsg]             = useState("");

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
+
 async function checkAuth() {
   const session = await auth();
   if (!session?.user) {

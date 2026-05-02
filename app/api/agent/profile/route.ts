@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
+
 // GET — agent profile data
 export async function GET() {
   try {

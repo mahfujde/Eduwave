@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Plus, Edit2, Trash2, X, Loader2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Bell, Plus, Edit2, Trash2, X, Loader2, ToggleLeft, ToggleRight, Upload, Image as ImageIcon, Video } from "lucide-react";
 import DeleteModal from "@/components/admin/DeleteModal";
 import { useForm } from "react-hook-form";
+import { useToast } from "@/hooks/useToast";
 
 const TYPE_COLORS: Record<string,string> = {
   info:"bg-blue-100 text-blue-700", success:"bg-green-100 text-green-700",
@@ -18,7 +19,14 @@ export default function AdminNotificationsPage() {
   const [editing, setEditing] = useState<any>(null);
   const [saving, setSaving]   = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const { register, handleSubmit, reset, watch } = useForm<any>();
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState("");
+  const { register, handleSubmit, reset, watch, setValue } = useForm<any>();
+
+  const toast = useToast();
+  const watchStyle = watch("style");
+  const watchImageUrl = watch("imageUrl");
+  const watchVideoUrl = watch("videoUrl");
 
   const fetchItems = async () => {
     setLoading(true);
@@ -31,31 +39,79 @@ export default function AdminNotificationsPage() {
 
   const openCreate = () => {
     setEditing(null);
-    reset({ type: "info", style: "bar", position: "top", isActive: true, isDismissible: true, sortOrder: 0, targetPages: '["*"]', delay: 0 });
+    setImagePreview("");
+    reset({ type: "info", style: "bar", position: "top", isActive: true, isDismissible: true, sortOrder: 0, targetPages: '["*"]', delay: 0, videoUrl: "", imageUrl: "" });
     setShowForm(true);
   };
-  const openEdit = (item: any) => { setEditing(item); reset({ ...item, targetPages: item.targetPages ?? '["*"]' }); setShowForm(true); };
+  const openEdit = (item: any) => {
+    setEditing(item);
+    setImagePreview(item.imageUrl || "");
+    reset({ ...item, targetPages: item.targetPages ?? '["*"]' });
+    setShowForm(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "notifications");
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const d = await res.json();
+      if (d.success && d.data?.url) {
+        setValue("imageUrl", d.data.url);
+        setImagePreview(d.data.url);
+        toast.success("Image uploaded!");
+      } else {
+        toast.error(d.message || "Upload failed.");
+      }
+    } catch {
+      toast.error("Upload failed.");
+    }
+    setUploading(false);
+  };
 
   const onSubmit = async (data: any) => {
     setSaving(true);
-    if (editing) {
-      await fetch(`/api/admin/notifications?id=${editing.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-    } else {
-      await fetch("/api/admin/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    try {
+      if (editing) {
+        const res = await fetch(`/api/admin/notifications?id=${editing.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+        const json = await res.json();
+        toast.success(json.message || "Notification updated!");
+      } else {
+        const res = await fetch("/api/admin/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+        const json = await res.json();
+        toast.success(json.message || "Notification created!");
+      }
+      await fetchItems(); setShowForm(false);
+    } catch {
+      toast.error("Failed to save notification.");
     }
-    await fetchItems(); setShowForm(false); setSaving(false);
+    setSaving(false);
   };
 
   const deleteItem = async () => {
     if (!deleteTarget) return;
-    await fetch(`/api/admin/notifications?id=${deleteTarget.id}`, { method: "DELETE" });
-    fetchItems();
+    try {
+      await fetch(`/api/admin/notifications?id=${deleteTarget.id}`, { method: "DELETE" });
+      toast.success("Notification deleted!");
+      fetchItems();
+    } catch {
+      toast.error("Failed to delete notification.");
+    }
     setDeleteTarget(null);
   };
 
   const toggleActive = async (item: any) => {
-    await fetch(`/api/admin/notifications?id=${item.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !item.isActive }) });
-    fetchItems();
+    try {
+      await fetch(`/api/admin/notifications?id=${item.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !item.isActive }) });
+      toast.success(`Notification ${!item.isActive ? "activated" : "deactivated"}!`);
+      fetchItems();
+    } catch {
+      toast.error("Failed to toggle notification.");
+    }
   };
 
   return (
@@ -88,6 +144,8 @@ export default function AdminNotificationsPage() {
                     {item.isActive
                       ? <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Active</span>
                       : <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Inactive</span>}
+                    {item.videoUrl && <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-medium flex items-center gap-1"><Video size={10}/> Video</span>}
+                    {item.imageUrl && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 font-medium flex items-center gap-1"><ImageIcon size={10}/> Image</span>}
                   </div>
                   <h3 className="font-semibold text-gray-800 mt-2">{item.title}</h3>
                   <p className="text-gray-500 text-sm mt-1 line-clamp-2">{item.content}</p>
@@ -97,6 +155,10 @@ export default function AdminNotificationsPage() {
                     {item.delay > 0 && <span>Delay: {item.delay}s</span>}
                   </div>
                 </div>
+                {/* Thumbnail preview */}
+                {item.imageUrl && (
+                  <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover border shrink-0" />
+                )}
                 <div className="flex items-center gap-2 shrink-0">
                   <button onClick={() => toggleActive(item)} title={item.isActive ? "Deactivate" : "Activate"}
                     className={`p-2 rounded-xl ${item.isActive ? "bg-green-50 text-green-600 hover:bg-green-100" : "bg-gray-100 text-gray-400 hover:bg-gray-200"}`}>
@@ -114,7 +176,7 @@ export default function AdminNotificationsPage() {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mt-10 mb-10">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl mt-10 mb-10">
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-lg font-bold text-[var(--primary)]">{editing ? "Edit Notification" : "New Notification"}</h2>
               <button onClick={() => setShowForm(false)}><X size={20}/></button>
@@ -145,6 +207,65 @@ export default function AdminNotificationsPage() {
                 <textarea {...register("content", { required: true })} rows={3} className="input-field resize-none"/>
               </div>
 
+              {/* Media section — for Popup & Banner */}
+              {(watchStyle === "popup" || watchStyle === "banner") && (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-4">
+                  <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <ImageIcon size={16} className="text-[var(--accent)]"/> Media (Image / Video)
+                  </p>
+
+                  {/* Image upload */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Upload Image</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        {...register("imageUrl")}
+                        className="input-field flex-1 text-sm"
+                        placeholder="Image URL or upload below"
+                      />
+                      <label className={`btn-secondary !py-2 text-xs cursor-pointer flex items-center gap-1.5 ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+                        {uploading ? <Loader2 size={14} className="animate-spin"/> : <Upload size={14}/>}
+                        Upload
+                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploading}/>
+                      </label>
+                    </div>
+                    {(imagePreview || watchImageUrl) && (
+                      <div className="mt-2 relative">
+                        <img src={imagePreview || watchImageUrl} alt="Preview" className="rounded-xl border max-h-48 w-auto" />
+                        <button
+                          type="button"
+                          onClick={() => { setValue("imageUrl", ""); setImagePreview(""); }}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        >
+                          <X size={12}/>
+                        </button>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">Image will display at its natural size in popup/banner</p>
+                  </div>
+
+                  {/* Video URL */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1.5">
+                      <Video size={14} className="text-red-500"/> YouTube Video URL
+                    </label>
+                    <input {...register("videoUrl")} className="input-field text-sm" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."/>
+                    <p className="text-xs text-gray-400 mt-1">YouTube video will be embedded below the content</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Video URL for bar style too (simpler) */}
+              {watchStyle === "bar" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+                    <Video size={14} className="text-red-500"/> Video URL (optional)
+                  </label>
+                  <input {...register("videoUrl")} className="input-field" placeholder="YouTube or Vimeo URL"/>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Link Text</label>
@@ -174,15 +295,12 @@ export default function AdminNotificationsPage() {
                 <p className="text-xs text-gray-400 mt-1">Use ["*"] for all pages, or specify paths like ["/","/universities"]</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Popup Delay (seconds)</label>
-                <input {...register("delay", { valueAsNumber: true })} type="number" min="0" className="input-field"/>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Video URL (optional)</label>
-                <input {...register("videoUrl")} className="input-field" placeholder="YouTube or Vimeo URL"/>
-              </div>
+              {watchStyle === "popup" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Popup Delay (seconds)</label>
+                  <input {...register("delay", { valueAsNumber: true })} type="number" min="0" className="input-field"/>
+                </div>
+              )}
 
               <div className="flex gap-6">
                 <label className="flex items-center gap-2 cursor-pointer">

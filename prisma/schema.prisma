@@ -187,6 +187,7 @@ model Notification {
   endDate      DateTime? @map("end_date")
   delay        Int?      @default(0)       // seconds delay (for popups)
   videoUrl     String?   @map("video_url")
+  imageUrl     String?   @map("image_url")
   linkText     String?   @map("link_text")
   linkUrl      String?   @map("link_url")
   isDismissible Boolean  @default(true)   @map("is_dismissible")

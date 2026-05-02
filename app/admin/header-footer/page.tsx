@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Save, Loader2, CheckCircle2, GripVertical, Globe, Layout, Upload } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
 
 interface NavLink { label: string; href: string; }
 interface QuickLink { label: string; href: string; }
@@ -74,6 +75,7 @@ export default function HeaderFooterPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   // Header state
   const [logoText, setLogoText] = useState("Eduwave");
@@ -150,13 +152,19 @@ export default function HeaderFooterPage() {
       { key: "footer_fb_group", value: fbGroup },
       { key: "footer_copyright", value: copyright },
     ];
-    await fetch("/api/admin/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ settings: updates }),
-    });
-    setSaving(false); setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: updates }),
+      });
+      toast.success("Header & Footer settings saved!");
+      setSaving(false); setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      toast.error("Failed to save settings.");
+      setSaving(false);
+    }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 size={32} className="animate-spin text-[var(--accent)]" /></div>;

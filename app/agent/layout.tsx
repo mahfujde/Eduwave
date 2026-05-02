@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LayoutDashboard, Users, Menu, X, ChevronRight, Handshake, LogOut, BookOpen, User, UserPlus, Wallet } from "lucide-react";
+import ToastContainer from "@/components/admin/ToastContainer";
 
 const navLinks = [
   { href: "/agent/dashboard",     label: "Dashboard",        icon: LayoutDashboard },
@@ -40,6 +41,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      <ToastContainer />
       {open && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside className={`fixed inset-y-0 left-0 w-64 z-50 flex flex-col

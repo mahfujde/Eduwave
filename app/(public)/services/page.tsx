@@ -122,7 +122,7 @@ export default function ServicesPage() {
               {c("svc-hero", "subtitle", "100% Free of Charge")}
             </span>
             <h1 className="text-white text-4xl md:text-5xl font-extrabold">{c("svc-hero", "title", "Our Complimentary Services")}</h1>
-            <p className="mt-4 text-blue-100/70 text-lg max-w-2xl mx-auto">
+            <p className="mt-4 text-blue-100/70 text-lg">
               {c("svc-hero", "content", "Most consultancies complete the paperwork and call it a day. We are built differently.")}
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function ServicesPage() {
       {/* Intro */}
       <section ref={introAnim.ref} className="section bg-white">
         <div className="container-custom">
-          <div className={`max-w-3xl mx-auto text-center transition-all duration-800 ${introAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <div className={`text-center transition-all duration-800 ${introAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <p className="text-gray-600 text-lg leading-relaxed">
               At Eduwave Educational Consultancy, we do not simply process your application and consider our
               responsibility finished. We act as your <strong className="text-[var(--primary)]">local guardian in Malaysia</strong>.
@@ -159,7 +159,7 @@ export default function ServicesPage() {
       {/* Services Grid */}
       <section ref={gridAnim.ref} className="section" style={{ background: "var(--muted)" }}>
         <div className="container-custom">
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6">
             {services.map((svc, i) => (
               <div
                 key={svc.title}
@@ -188,7 +188,7 @@ export default function ServicesPage() {
       <section ref={teamAnim.ref} className="section bg-white">
         <div className="container-custom">
           <div
-            className={`dark-gradient-bg max-w-4xl mx-auto rounded-3xl p-8 md:p-12 overflow-hidden relative
+            className={`dark-gradient-bg rounded-3xl p-8 md:p-12 overflow-hidden relative
                       transition-all duration-800 ${teamAnim.visible ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
             style={{ background: "linear-gradient(135deg, #1A2B5F 0%, #0F1B3F 100%)" }}
           >
@@ -231,7 +231,7 @@ export default function ServicesPage() {
         <div className="container-custom text-center">
           <div className={`transition-all duration-800 ${ctaAnim.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <h2 className="text-white text-3xl font-extrabold mb-4">{c("svc-cta", "title", "All These Services. Zero Cost. Always.")}</h2>
-            <p className="text-white/80 mb-8 max-w-xl mx-auto">
+            <p className="text-white/80 mb-8">
               {c("svc-cta", "content", "Ready to take the first step? Reach out and get free, honest guidance from our Malaysia-based team.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

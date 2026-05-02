@@ -45,16 +45,16 @@ export default function BlogPostPage() {
         <ArrowLeft size={16} /> Back to Blog
       </Link>
 
-      <article className="max-w-3xl mx-auto">
+      <article>
         {/* Cover image */}
         {post.coverImage && (
-          <div className="aspect-video rounded-2xl overflow-hidden mb-8 bg-gray-100">
+          <div className="rounded-2xl overflow-hidden mb-8 bg-gray-100">
             <Image
               src={post.coverImage}
               alt={post.title}
-              width={800}
-              height={450}
-              className="w-full h-full object-cover"
+              width={1200}
+              height={675}
+              className="w-full h-auto object-contain"
             />
           </div>
         )}

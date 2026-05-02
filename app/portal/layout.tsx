@@ -9,6 +9,7 @@ import {
   GraduationCap, Menu, X, ChevronRight, BookOpen,
 } from "lucide-react";
 import { useState } from "react";
+import ToastContainer from "@/components/admin/ToastContainer";
 
 const navLinks = [
   { href: "/portal/dashboard",     label: "Dashboard",       icon: LayoutDashboard },
@@ -38,6 +39,7 @@ export default function StudentPortalLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      <ToastContainer />
       {/* Mobile overlay */}
       {open && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 

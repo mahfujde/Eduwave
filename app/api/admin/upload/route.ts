@@ -20,9 +20,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml", "application/pdf"];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ success: false, message: "Invalid file type. Only images allowed." }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Invalid file type. Only images and PDFs allowed." }, { status: 400 });
     }
 
     // Validate file size (max 5MB)

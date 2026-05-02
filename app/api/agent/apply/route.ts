@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { sendEmail } from "@/lib/nodemailer";
+import { sendEmail, ADMIN_EMAIL } from "@/lib/nodemailer";
 
 // Public agent application submission
 export async function POST(req: Request) {
@@ -62,9 +62,12 @@ export async function POST(req: Request) {
             </div>
           </div>
         `;
-        for (const admin of admins) {
+        // Always include ADMIN_EMAIL and deduplicate
+        const adminEmailSet = new Set(admins.map((a: any) => a.email));
+        adminEmailSet.add(ADMIN_EMAIL);
+        for (const adminAddr of adminEmailSet) {
           await sendEmail({
-            to: admin.email,
+            to: adminAddr,
             subject: `🤝 New Agent Application — ${name}`,
             html,
           });

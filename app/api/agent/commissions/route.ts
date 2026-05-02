@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
+
 // GET — agent views their commissions
 export async function GET() {
   try {

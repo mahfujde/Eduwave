@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FileText, Search, Filter, Eye, MessageSquare, X, Check, Loader2, ChevronDown } from "lucide-react";
 import { getPublicStatusInfo, APPLICATION_STATUSES } from "@/lib/tracking";
+import { useToast } from "@/hooks/useToast";
 
 const STATUS_COLORS: Record<string,string> = {
   green:"bg-green-100 text-green-700", red:"bg-red-100 text-red-700",
@@ -24,6 +25,8 @@ export default function AdminApplicationsPage() {
   const [msgText, setMsgText] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
 
+  const toast = useToast();
+
   const fetchApps = async () => {
     setLoading(true);
     const qs = new URLSearchParams({ ...(status !== "all" && { status }) });
@@ -39,25 +42,45 @@ export default function AdminApplicationsPage() {
   const saveStatus = async () => {
     if (!selected) return;
     setSaving(true);
-    const res  = await fetch(`/api/admin/applications?id=${selected.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus, adminNotes }),
-    });
-    const json = await res.json();
-    if (json.success) { setSelected(null); fetchApps(); }
+    try {
+      const res  = await fetch(`/api/admin/applications?id=${selected.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, adminNotes }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Application updated successfully! Status email sent to student.");
+        setSelected(null);
+        fetchApps();
+      } else {
+        toast.error(json.message || "Failed to update application.");
+      }
+    } catch {
+      toast.error("Network error. Please try again.");
+    }
     setSaving(false);
   };
 
   const sendMsg = async () => {
     if (!msgText.trim() || !selected) return;
     setSendingMsg(true);
-    await fetch("/api/student/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ applicationId: selected.id, message: msgText }),
-    });
-    setMsgText("");
+    try {
+      const res = await fetch("/api/student/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId: selected.id, message: msgText }),
+      });
+      const json = await res.json();
+      if (json.success !== false) {
+        toast.success("Message sent to student!");
+        setMsgText("");
+      } else {
+        toast.error(json.message || "Failed to send message.");
+      }
+    } catch {
+      toast.error("Network error. Please try again.");
+    }
     setSendingMsg(false);
   };
 

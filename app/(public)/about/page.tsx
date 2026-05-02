@@ -95,7 +95,7 @@ export default function AboutPage() {
             {c("about-hero", "subtitle", "About Eduwave")}
           </span>
           <h1 className="text-white text-4xl md:text-5xl font-extrabold">{c("about-hero", "title", "We Are More Than a Consultancy")}</h1>
-          <p className="mt-4 text-blue-100/70 text-lg max-w-2xl mx-auto">
+          <p className="mt-4 text-blue-100/70 text-lg">
             {c("about-hero", "content", "We are your local guardian in Malaysia — from the moment you reach out until long after you settle into student life.")}
           </p>
         </div>
@@ -104,7 +104,7 @@ export default function AboutPage() {
       {/* Story */}
       <section className="section bg-white">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto" data-anim="fade-up">
+          <div data-anim="fade-up">
             <div className="grid md:grid-cols-2 gap-10 items-start">
               <div>
                 <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-semibold mb-3">{c("about-story", "subtitle", "Est. 2022")}</span>
@@ -153,7 +153,7 @@ export default function AboutPage() {
       {/* Mission & Vision */}
       <section className="section" style={{ background: "var(--muted)" }}>
         <div className="container-custom">
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto" data-anim-stagger="fade-up">
+          <div className="grid md:grid-cols-2 gap-8" data-anim-stagger="fade-up">
             <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-700">
               <div className="w-14 h-14 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center mb-5">
                 <Globe size={28} className="text-[var(--primary)]" />
@@ -190,7 +190,7 @@ export default function AboutPage() {
           <div className={`${cmsAlign("about-diff")} mb-12`} data-anim="fade-up">
             <h2 className="text-[var(--primary)]">{c("about-diff", "title", "Why We Are Different")}</h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto" data-anim-stagger="fade-up">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" data-anim-stagger="fade-up">
             {differences.map((d) => (
               <div
                 key={d.title}
@@ -217,13 +217,13 @@ export default function AboutPage() {
               {c("about-team", "subtitle", "Our Leadership")}
             </span>
             <h2 className="text-white">{c("about-team", "title", "Built by People Who Lived the Journey")}</h2>
-            <p className="mt-4 text-blue-100/60 max-w-2xl mx-auto">
+            <p className="mt-4 text-blue-100/60">
               {c("about-team", "content", "Eduwave was not built in a boardroom. It was built by people who lived the journey, understood the struggle, and decided to do something about it.")}
             </p>
           </div>
 
           {/* Carousel */}
-          <div className="relative max-w-3xl mx-auto" data-anim="fade-up">
+          <div className="relative max-w-5xl mx-auto" data-anim="fade-up">
             {/* Navigation Arrows */}
             {leaders.length > 1 && (
               <>
@@ -331,7 +331,7 @@ export default function AboutPage() {
       <section className="py-16 bg-gradient-to-r from-[var(--accent)] to-[#D04E18]">
         <div className="container-custom text-center">
           <h2 className="text-white text-3xl font-extrabold mb-4">{c("about-cta", "title", "Ready to Start Your Journey?")}</h2>
-          <p className="text-white/80 mb-8 max-w-xl mx-auto">
+          <p className="text-white/80 mb-8">
             {c("about-cta", "content", "Get in touch with our Malaysia-based team today. Free, honest guidance — 24/7.")}
           </p>
           <Link href={c("about-cta", "ctaUrl", "/contact")} className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[var(--accent)] font-bold rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">

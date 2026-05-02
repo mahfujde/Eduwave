@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
-import { sendEmail, buildCommissionPaymentEmail } from "@/lib/nodemailer";
+import { sendClientEmail, buildCommissionPaymentEmail } from "@/lib/nodemailer";
 
 // GET — admin views all commissions
 export async function GET(req: Request) {
@@ -129,7 +129,7 @@ export async function PATCH(req: Request) {
           universityName: commission.application.university?.name || commission.application.universityName || "University",
           receiptUrl: receiptUrl || undefined,
         });
-        await sendEmail({
+        await sendClientEmail({
           to: commission.agent.email,
           subject: `💰 Commission Payment Processed — ${commission.application.trackingNumber}`,
           html,

@@ -12,6 +12,7 @@ import {
   Globe, ExternalLink, Palette, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ToastContainer from "@/components/admin/ToastContainer";
 
 const iconMap: Record<string, any> = {
   LayoutDashboard, Building2, GraduationCap, MessageSquare,
@@ -74,6 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ToastContainer />
       {open && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setOpen(false)}/>}
 
       {/* ── Sidebar ── */}

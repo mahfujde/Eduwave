@@ -5,6 +5,9 @@ import prisma from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const session = await auth();

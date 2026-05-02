@@ -5,6 +5,9 @@ import { isAdmin } from "@/lib/rbac";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
+
 // GET all agent applications (pending/approved/rejected)
 export async function GET() {
   try {
@@ -57,21 +60,12 @@ export async function PATCH(req: Request) {
         const siteUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://theeduwave.com";
         const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "+60112-4103692";
 
-        // Try sending email via nodemailer if SMTP is configured
-        if (process.env.SMTP_HOST && process.env.SMTP_PASS) {
-          const nodemailer = require("nodemailer");
-          const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT) || 587,
-            secure: false,
-            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-          });
-
-          await transporter.sendMail({
-            from: process.env.SMTP_FROM || `Eduwave <${process.env.SMTP_USER}>`,
-            to: agentApp.email,
-            subject: "🎉 Your Agent Application Has Been Approved - Eduwave",
-            html: `
+        // Send email via sendClientEmail helper (noreply reply-to)
+        const { sendClientEmail } = require("@/lib/nodemailer");
+        await sendClientEmail({
+          to: agentApp.email,
+          subject: "🎉 Your Agent Application Has Been Approved - Eduwave",
+          html: `
               <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; border-radius: 16px; overflow: hidden;">
                 <div style="background: linear-gradient(135deg, #1A2B5F, #0F1B3F); padding: 40px 30px; text-align: center;">
                   <h1 style="color: #fff; margin: 0; font-size: 28px;">🎉 Welcome to Eduwave!</h1>
@@ -127,9 +121,8 @@ export async function PATCH(req: Request) {
                 </div>
               </div>
             `,
-          });
+        });
           emailSent = true;
-        }
       } catch (emailError) {
         console.error("Failed to send approval email:", emailError);
         // Email failure should not block the approval

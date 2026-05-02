@@ -85,54 +85,99 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Contact info sidebar */}
+            {/* Contact info sidebar — CMS driven from ct-info section */}
             <aside className="space-y-6">
               <div className="card p-6 space-y-5">
-                <h3 className="text-lg font-bold text-[var(--primary)]">Get in Touch</h3>
+                <h3 className="text-lg font-bold text-[var(--primary)]">
+                  {c("ct-info", "title", "Get in Touch")}
+                </h3>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-                    <Phone size={18} className="text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">WhatsApp / Phone</p>
-                    <a href="tel:+601124103692" className="text-sm text-[var(--accent)] font-semibold hover:underline">
-                      +60112-4103692 (Malaysia, Primary)
-                    </a>
-                  </div>
-                </div>
+                {(() => {
+                  const infoSection = cms["ct-info"];
+                  const items = infoSection?.items ?? [];
+                  // CMS-defined contact cards
+                  if (items.length > 0) {
+                    const iconStyles: Record<string, { bg: string; color: string; Icon: any }> = {
+                      "📞": { bg: "bg-green-50", color: "text-green-600", Icon: Phone },
+                      "✉️": { bg: "bg-blue-50", color: "text-blue-600", Icon: Mail },
+                      "📍": { bg: "bg-[var(--accent)]/10", color: "text-[var(--accent)]", Icon: MapPin },
+                      "🕐": { bg: "bg-purple-50", color: "text-purple-600", Icon: Clock },
+                    };
+                    return items.map((item: any, i: number) => {
+                      const style = iconStyles[item.icon] || { bg: "bg-gray-50", color: "text-gray-600", Icon: MapPin };
+                      const isPhone = item.icon === "📞";
+                      const isEmail = item.icon === "✉️";
+                      return (
+                        <div key={item.id || i} className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-lg ${style.bg} flex items-center justify-center shrink-0`}>
+                            <style.Icon size={18} className={style.color} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">{item.subtitle || item.title}</p>
+                            {isPhone ? (
+                              <a href={`tel:${(item.title || "").replace(/[^0-9+]/g, "")}`}
+                                className="text-sm text-[var(--accent)] font-semibold hover:underline">
+                                {item.title} {item.content && `(${item.content})`}
+                              </a>
+                            ) : isEmail ? (
+                              <a href={`mailto:${item.title}`} className="text-sm text-[var(--accent)] hover:underline">
+                                {item.title}
+                              </a>
+                            ) : (
+                              <p className="text-sm text-gray-500">{item.content || item.title}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    });
+                  }
 
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                    <Mail size={18} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Email</p>
-                    <a href="mailto:ceo.eduwave@gmail.com" className="text-sm text-[var(--accent)] hover:underline">
-                      ceo.eduwave@gmail.com
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
-                    <MapPin size={18} className="text-[var(--accent)]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Support Office</p>
-                    <p className="text-sm text-gray-500">Akhteruzzaman Center (7th Floor), 21/22, Agrabad CIA, Chattogram, Bangladesh</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
-                    <Clock size={18} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Virtual Counselling</p>
-                    <p className="text-sm text-gray-500">Available <strong>24/7</strong> from Malaysia via WhatsApp, Video Call, or Phone</p>
-                  </div>
-                </div>
+                  // Fallback: SiteConfig settings
+                  return (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                          <Phone size={18} className="text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">WhatsApp / Phone</p>
+                          <a href={`tel:${(settings.contact_phone || "+60112-4103692").replace(/[^0-9+]/g, "")}`} className="text-sm text-[var(--accent)] font-semibold hover:underline">
+                            {settings.contact_phone || "+60112-4103692"} (Malaysia, Primary)
+                          </a>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                          <Mail size={18} className="text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">Email</p>
+                          <a href={`mailto:${settings.contact_email || "ceo.eduwave@gmail.com"}`} className="text-sm text-[var(--accent)] hover:underline">
+                            {settings.contact_email || "ceo.eduwave@gmail.com"}
+                          </a>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                          <MapPin size={18} className="text-[var(--accent)]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">Support Office</p>
+                          <p className="text-sm text-gray-500">{settings.contact_address || "Chattogram-4100"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+                          <Clock size={18} className="text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">Virtual Counselling</p>
+                          <p className="text-sm text-gray-500">Available <strong>24/7</strong> from Malaysia via WhatsApp, Video Call, or Phone</p>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Social links */}
@@ -158,7 +203,7 @@ export default function ContactPage() {
 
               {/* WhatsApp CTA */}
               <a
-                href="https://wa.me/601124103692"
+                href={`https://wa.me/${(settings.contact_phone || "+60112-4103692").replace(/[^0-9]/g, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="card p-6 flex items-center gap-4 bg-green-50 border-green-200

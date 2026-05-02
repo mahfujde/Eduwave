@@ -23,7 +23,7 @@ export default function BlogPage() {
             Latest Updates
           </div>
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">Blog</h1>
-          <p className="text-blue-100/80 text-base md:text-lg max-w-xl mx-auto">
+          <p className="text-blue-100/80 text-base md:text-lg">
             Latest news, tips, and insights about studying in Malaysia.
           </p>
         </div>
@@ -47,13 +47,13 @@ export default function BlogPage() {
                 className="card group overflow-hidden"
               >
                 {post.coverImage && (
-                  <div className="aspect-video bg-gray-100 overflow-hidden">
+                  <div className="bg-gray-100 overflow-hidden">
                     <Image
                       src={post.coverImage}
                       alt={post.title}
-                      width={400}
-                      height={225}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      width={600}
+                      height={400}
+                      className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                 )}

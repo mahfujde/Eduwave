@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { sendEmail, buildWelcomeEmail } from "@/lib/nodemailer";
+import { sendClientEmail, buildWelcomeEmail } from "@/lib/nodemailer";
 
 export async function POST(req: Request) {
   try {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
     // Send welcome email (non-blocking)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://theeduwave.com";
-    sendEmail({
+    sendClientEmail({
       to: email,
       subject: "Welcome to Eduwave! 🎉 Your account is ready",
       html: buildWelcomeEmail(name, `${siteUrl}/login`),

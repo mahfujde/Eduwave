@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
+
 // Whitelist of fields students can update
 const ALLOWED_FIELDS = [
   "dateOfBirth", "nationality", "passportNo", "passportExpiry",

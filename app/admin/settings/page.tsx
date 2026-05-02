@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { useAdminSettings } from "@/hooks/useData";
 import type { SiteConfig } from "@/types";
 import { Loader2, Save, CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
 
 export default function AdminSettingsPage() {
   const { data: settings, isLoading, refetch } = useAdminSettings();
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (settings) {
@@ -24,16 +26,23 @@ export default function AdminSettingsPage() {
     setSaved(false);
     const settingsArray = Object.entries(form).map(([key, value]) => ({ key, value }));
     try {
-      await fetch("/api/admin/settings", {
+      const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ settings: settingsArray }),
       });
-      setSaved(true);
-      refetch();
-      setTimeout(() => setSaved(false), 3000);
+      const json = await res.json();
+      if (res.ok && json.success !== false) {
+        setSaved(true);
+        refetch();
+        toast.success("Settings saved successfully! Changes are now live.");
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        toast.error(json.message || "Failed to save settings.");
+      }
     } catch (err) {
       console.error(err);
+      toast.error("Network error. Please try again.");
     }
     setSaving(false);
   };

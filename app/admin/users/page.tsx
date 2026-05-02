@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import DeleteModal from "@/components/admin/DeleteModal";
 import { useForm } from "react-hook-form";
+import { useToast } from "@/hooks/useToast";
 
 const ROLES = ["SUPER_ADMIN","ADMIN","EDITOR","AGENT","STUDENT"] as const;
 const ROLE_COLORS: Record<string,string> = {
@@ -38,16 +39,28 @@ function ProfileModal({ user, onClose }: { user: any; onClose: () => void }) {
     }).finally(() => setLoading(false));
   }, [user.id]);
 
+  const toast = useToast();
+
   const sendMessage = async () => {
     if (!newMsg.trim()) return;
     setSending(true);
-    await fetch("/api/admin/notifications/user-message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: user.id, message: newMsg, userName: user.name }),
-    });
-    setMessages(prev => [...prev, { content: newMsg, from: "Admin", time: new Date().toLocaleTimeString() }]);
-    setNewMsg("");
+    try {
+      const res = await fetch("/api/admin/notifications/user-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, message: newMsg, userName: user.name }),
+      });
+      const json = await res.json();
+      if (json.success !== false) {
+        toast.success("Message sent to " + user.name + "!");
+        setMessages(prev => [...prev, { content: newMsg, from: "Admin", time: new Date().toLocaleTimeString() }]);
+        setNewMsg("");
+      } else {
+        toast.error(json.message || "Failed to send message.");
+      }
+    } catch {
+      toast.error("Network error sending message.");
+    }
     setSending(false);
   };
 
@@ -227,6 +240,8 @@ export default function AdminUsersPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, reset } = useForm<any>();
 
+  const toast = useToast();
+
   const fetchUsers = async () => {
     setLoading(true);
     const res = await fetch("/api/admin/users");
@@ -245,24 +260,45 @@ export default function AdminUsersPage() {
     if (!data.agentCode || data.agentCode.trim() === "") {
       data.agentCode = null;
     }
-    if (editing) {
-      await fetch("/api/admin/users", { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ ...data, id: editing.id }) });
-    } else {
-      await fetch("/api/admin/users", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(data) });
+    try {
+      if (editing) {
+        const res = await fetch("/api/admin/users", { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ ...data, id: editing.id }) });
+        const json = await res.json();
+        if (json.success !== false) toast.success("User updated successfully!");
+        else toast.error(json.message || "Failed to update user.");
+      } else {
+        const res = await fetch("/api/admin/users", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(data) });
+        const json = await res.json();
+        if (json.success !== false) toast.success("User created successfully!");
+        else toast.error(json.message || "Failed to create user.");
+      }
+      await fetchUsers(); setShowForm(false);
+    } catch {
+      toast.error("Network error. Please try again.");
     }
-    await fetchUsers(); setShowForm(false); setSaving(false);
+    setSaving(false);
   };
 
   const deleteUser = async () => {
     if (!deleteTarget) return;
-    await fetch(`/api/admin/users?id=${deleteTarget.id}`, { method:"DELETE" });
-    fetchUsers();
+    try {
+      await fetch(`/api/admin/users?id=${deleteTarget.id}`, { method:"DELETE" });
+      toast.success("User deleted successfully!");
+      fetchUsers();
+    } catch {
+      toast.error("Failed to delete user.");
+    }
     setDeleteTarget(null);
   };
 
   const toggleActive = async (u: any) => {
-    await fetch(`/api/admin/users?id=${u.id}`, { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ isActive: !u.isActive }) });
-    fetchUsers();
+    try {
+      await fetch(`/api/admin/users?id=${u.id}`, { method:"PUT", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ isActive: !u.isActive }) });
+      toast.success(`User ${!u.isActive ? "activated" : "deactivated"}!`);
+      fetchUsers();
+    } catch {
+      toast.error("Failed to toggle user status.");
+    }
   };
 
   const filtered = users.filter(u => {

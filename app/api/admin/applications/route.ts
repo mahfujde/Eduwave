@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isStaff } from "@/lib/rbac";
-import { sendEmail, buildApplicationStatusEmail } from "@/lib/nodemailer";
+import { sendClientEmail, buildApplicationStatusEmail } from "@/lib/nodemailer";
 
 export async function GET(req: Request) {
   try {
@@ -76,7 +76,7 @@ export async function PATCH(req: Request) {
           status: body.status,
           message: body.adminNotes || undefined,
         });
-        await sendEmail({
+        await sendClientEmail({
           to: updated.student.email,
           subject: `📋 Application Update — ${updated.trackingNumber} (${body.status.replace(/_/g, " ").toUpperCase()})`,
           html,

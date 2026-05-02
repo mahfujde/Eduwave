@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { sendEmail, buildInquiryEmail, buildInquiryAutoReply } from "@/lib/nodemailer";
+import { sendEmail, sendClientEmail, buildInquiryEmail, buildInquiryAutoReply, ADMIN_EMAIL } from "@/lib/nodemailer";
 
 // POST /api/public/inquiries — submit a new inquiry
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, phone, whatsapp, university, program, message } = body;
+    const { name, email, phone, whatsapp, university, program, level, message } = body;
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -23,25 +23,24 @@ export async function POST(req: NextRequest) {
         whatsapp: whatsapp || null,
         university: university || null,
         program: program || null,
-        message,
+        message: level ? `[Level: ${level}] ${message}` : message,
         status: "new",
         source: "website",
       },
     });
 
     // 1) Send notification email to admin (non-blocking)
-    const adminEmail = await prisma.siteConfig.findUnique({ where: { key: "contact_email" } });
-    if (adminEmail?.value) {
-      sendEmail({
-        to: adminEmail.value,
-        subject: `📩 New Inquiry from ${name}`,
-        html: buildInquiryEmail({ name, email, phone, university, program, message }),
-        replyTo: email,
-      }).catch((err) => console.error("Admin notification email failed:", err));
-    }
-
-    // 2) Send auto-reply to the student (non-blocking)
+    const adminEmailSetting = await prisma.siteConfig.findUnique({ where: { key: "contact_email" } });
+    const adminTo = adminEmailSetting?.value || ADMIN_EMAIL;
     sendEmail({
+      to: adminTo,
+      subject: `📩 New Inquiry from ${name}`,
+      html: buildInquiryEmail({ name, email, phone, university, program, message }),
+      replyTo: email,
+    }).catch((err) => console.error("Admin notification email failed:", err));
+
+    // 2) Send auto-reply to the student (non-blocking, from noreply)
+    sendClientEmail({
       to: email,
       subject: "Thank you for contacting Eduwave! We'll get back to you soon 🎓",
       html: buildInquiryAutoReply({ name, university, program }),

@@ -1,19 +1,34 @@
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 
-// Dev mode detection — when SMTP is not configured, log emails to console
-const isDevMode = !process.env.SMTP_PASS || process.env.SMTP_USER === "your-email@gmail.com";
+// Lazy transporter — created on first use so env vars are guaranteed loaded
+let _transporter: Transporter | null = null;
 
-const transporter = isDevMode
-  ? null
-  : nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+function getTransporter(): Transporter | null {
+  if (_transporter) return _transporter;
+
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  // If SMTP credentials are missing or still placeholder, skip
+  if (!pass || !user || user === "your-email@gmail.com") {
+    console.warn("⚠️  SMTP not configured — emails will be logged to console");
+    return null;
+  }
+
+  _transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: { user, pass },
+  });
+
+  console.log("✅ SMTP transporter created for", user);
+  return _transporter;
+}
+
+/** Admin email address — all admin notifications go here */
+export const ADMIN_EMAIL = "ceo.eduwave@gmail.com";
 
 interface EmailOptions {
   to: string;
@@ -24,7 +39,9 @@ interface EmailOptions {
 
 export async function sendEmail({ to, subject, html, replyTo }: EmailOptions) {
   try {
-    if (isDevMode || !transporter) {
+    const transporter = getTransporter();
+
+    if (!transporter) {
       // Dev mode fallback — log to console
       console.log("\n📧 ──── DEV MODE EMAIL ────────────────────────");
       console.log(`To: ${to}`);
@@ -35,18 +52,35 @@ export async function sendEmail({ to, subject, html, replyTo }: EmailOptions) {
       return { success: true, messageId: `dev-${Date.now()}` };
     }
 
+    const fromAddr = process.env.SMTP_FROM || `Eduwave <${process.env.SMTP_USER}>`;
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Eduwave" <noreply@theeduwave.com>',
+      from: fromAddr,
       to,
       subject,
       html,
       replyTo,
     });
+    console.log(`📧 Email sent to ${to} — ${info.messageId}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("Email send error:", error);
+    console.error("❌ Email send error:", error);
     return { success: false, error };
   }
+}
+
+/**
+ * Send an auto-reply email to a client/student.
+ * Sets replyTo to noreply@theeduwave.com so students see that when replying.
+ * Gmail SMTP requires FROM to match the authenticated account,
+ * so we use display name to indicate noreply.
+ */
+export async function sendClientEmail({ to, subject, html }: Omit<EmailOptions, "replyTo">) {
+  return sendEmail({
+    to,
+    subject,
+    html,
+    replyTo: "noreply@theeduwave.com",
+  });
 }
 
 /** Build an inquiry notification email */

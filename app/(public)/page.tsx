@@ -154,7 +154,7 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-6 text-lg md:text-xl text-blue-100/70 leading-relaxed max-w-lg text-justify">
+              <p className="mt-6 text-lg md:text-xl text-blue-100/70 leading-relaxed text-justify">
                 {c("home-hero", "content", "Malaysia-based. Available 24/7. Completely Free. 350+ students successfully enrolled.")}
               </p>
 
@@ -263,7 +263,7 @@ export default function HomePage() {
       {/* ═══ INTRO / WHO WE ARE ═══ */}
       <section className="section bg-white">
         <div className="container-custom">
-          <div className={`max-w-4xl mx-auto ${cmsAlign("home-intro")}`} data-anim="fade-up">
+          <div className={`${cmsAlign("home-intro")}`} data-anim="fade-up">
             <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-sm font-semibold mb-4">
               {c("home-intro", "subtitle", "Who We Are")}
             </span>
@@ -345,7 +345,7 @@ export default function HomePage() {
               {c("home-services", "subtitle", "100% Free Services")}
             </span>
             <h2 className="text-[var(--primary)]">{c("home-services", "title", "Everything We Do — At Zero Cost")}</h2>
-            <p className="mt-4 text-gray-700 max-w-2xl mx-auto">
+            <p className="mt-4 text-gray-700">
               {c("home-services", "content", "No consultation fees. No processing fees. No hidden costs. Not ever. We are funded by our university partners, which means world-class support at zero cost to you.")}
             </p>
           </div>
@@ -398,7 +398,7 @@ export default function HomePage() {
               {c("home-featured-unis", "subtitle", "Our Partners")}
             </span>
             <h2 className="text-[var(--primary)]">{c("home-featured-unis", "title", "Featured Partner Universities")}</h2>
-            <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">
+            <p className="mt-3 text-gray-500 text-sm">
               {c("home-featured-unis", "content", "Explore our featured partner universities offering world-class education for Bangladeshi students.")}
             </p>
           </div>
@@ -433,7 +433,7 @@ export default function HomePage() {
             <h2 className="text-[var(--primary)] text-3xl md:text-4xl font-extrabold">
               {c("home-testimonials", "title", "Success Stories")}
             </h2>
-            <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">
+            <p className="mt-3 text-gray-500 text-sm">
               {c("home-testimonials", "content", "350+ students have trusted Eduwave for their study abroad journey. Here's what some of them have to say.")}
             </p>
           </div>
@@ -460,7 +460,7 @@ export default function HomePage() {
               <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
                 {c("home-cta", "title", "Ready to Start Your Journey?")}
               </h2>
-              <p className="text-blue-100/70 text-lg max-w-xl mx-auto mb-8">
+              <p className="text-blue-100/70 text-lg mb-8">
                 {c("home-cta", "content", "Reach out and one of our Malaysia-based counsellors will respond promptly with honest, practical guidance. No pressure. No obligation. Just real answers.")}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { generateTrackingNumber } from "@/lib/tracking";
-import { sendEmail } from "@/lib/nodemailer";
+import { sendEmail, ADMIN_EMAIL } from "@/lib/nodemailer";
+
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
 
 // GET — list student's own applications
 export async function GET() {
@@ -108,9 +111,12 @@ export async function POST(req: Request) {
             </div>
           </div>
         `;
-        for (const admin of admins) {
+        // Always include ADMIN_EMAIL and deduplicate
+        const adminEmailSet = new Set(admins.map((a) => a.email));
+        adminEmailSet.add(ADMIN_EMAIL);
+        for (const adminAddr of adminEmailSet) {
           await sendEmail({
-            to: admin.email,
+            to: adminAddr,
             subject: `📋 New Student Application — ${studentName} (${trackingNumber})`,
             html,
           });

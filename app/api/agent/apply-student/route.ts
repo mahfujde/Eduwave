@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { generateTrackingNumber } from "@/lib/tracking";
-import { sendEmail, buildAgentStudentApplicationEmail } from "@/lib/nodemailer";
+import { sendEmail, buildAgentStudentApplicationEmail, ADMIN_EMAIL } from "@/lib/nodemailer";
 
 export async function POST(req: Request) {
   try {
@@ -106,7 +106,10 @@ export async function POST(req: Request) {
           programName: programName || "TBD",
           trackingNumber,
         });
-        for (const email of adminEmails) {
+        // Always include ADMIN_EMAIL and deduplicate
+        const adminEmailSet = new Set(adminEmails);
+        adminEmailSet.add(ADMIN_EMAIL);
+        for (const email of adminEmailSet) {
           await sendEmail({
             to: email,
             subject: `🎓 New Student Application by Agent ${agentName} — ${trackingNumber}`,

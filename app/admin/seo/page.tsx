@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, CheckCircle2, AlertTriangle, AlertCircle, ExternalLink, Loader2, Save } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
 
 interface SeoData {
   page: string;
@@ -95,13 +96,19 @@ export default function AdminSeoPage() {
       ogImage:   selected.ogImage,
       keywords:  selected.keywords,
     });
-    await fetch("/api/admin/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key, value, group: "seo", label: `SEO: ${selected.label}` }),
-    });
-    setSaving(false); setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value, group: "seo", label: `SEO: ${selected.label}` }),
+      });
+      toast.success(`SEO settings saved for "${selected.label}"!`);
+      setSaving(false); setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      toast.error("Failed to save SEO settings.");
+      setSaving(false);
+    }
   };
 
   const suggestions = analyseContent(selected.metaTitle, selected.metaDesc);

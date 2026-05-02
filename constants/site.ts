@@ -35,11 +35,13 @@ export const INQUIRY_STATUSES = [
 ] as const;
 
 export const PROGRAM_LEVELS = [
-  "Foundation",
+  "Certificate",
+  "Foundation / A-Level",
   "Diploma",
-  "Bachelor",
-  "Master",
-  "PhD",
+  "Advance Diploma",
+  "Bachelor Degree",
+  "Masters Degree",
+  "Doctoral Degree (PhD)",
 ] as const;
 
 export const PROGRAM_MODES = ["Full-time", "Part-time", "Online"] as const;

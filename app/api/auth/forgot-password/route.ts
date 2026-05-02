@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { nanoid } from "nanoid";
-import { sendEmail, buildPasswordResetEmail } from "@/lib/nodemailer";
+import { sendClientEmail, buildPasswordResetEmail } from "@/lib/nodemailer";
 
 export async function POST(req: Request) {
   try {
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
       // Send email
-      await sendEmail({
+      await sendClientEmail({
         to: normalizedEmail,
         subject: "Reset Your Password — Eduwave",
         html: buildPasswordResetEmail(resetUrl, user.name || "Student"),

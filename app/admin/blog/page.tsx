@@ -63,7 +63,7 @@ export default function AdminBlogPage() {
       formData.append("folder", "images/blog");
       const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
       const result = await res.json();
-      if (result.success) setValue("coverImage", result.data.url);
+      if (result.success) setValue("coverImage", result.data.url, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     };
     input.click();
   };

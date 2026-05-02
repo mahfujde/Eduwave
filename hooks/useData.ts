@@ -102,30 +102,54 @@ export function useAdminSettings() {
   });
 }
 
-/* ─── Mutation helpers ─── */
-export function useCreateMutation<T>(endpoint: string, queryKey: string[]) {
+/* ─── Mutation helpers (auto-toast on success/error) ─── */
+import { useToastStore } from "@/hooks/useToast";
+
+export function useCreateMutation<T>(endpoint: string, queryKey: string[], successMsg?: string) {
   const queryClient = useQueryClient();
+  const addToast = useToastStore.getState().addToast;
   return useMutation({
     mutationFn: (data: Partial<T>) =>
       apiFetch(endpoint, { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey });
+      addToast(successMsg || res?.message || "Created successfully!", "success");
+    },
+    onError: (err: any) => {
+      addToast(err?.message || "Failed to create. Please try again.", "error");
+    },
   });
 }
 
-export function useUpdateMutation<T>(endpoint: string, queryKey: string[]) {
+export function useUpdateMutation<T>(endpoint: string, queryKey: string[], successMsg?: string) {
   const queryClient = useQueryClient();
+  const addToast = useToastStore.getState().addToast;
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<T> }) =>
       apiFetch(`${endpoint}?id=${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey });
+      addToast(successMsg || res?.message || "Saved successfully!", "success");
+    },
+    onError: (err: any) => {
+      addToast(err?.message || "Failed to save. Please try again.", "error");
+    },
   });
 }
 
-export function useDeleteMutation(endpoint: string, queryKey: string[]) {
+export function useDeleteMutation(endpoint: string, queryKey: string[], successMsg?: string) {
   const queryClient = useQueryClient();
+  const addToast = useToastStore.getState().addToast;
   return useMutation({
     mutationFn: (id: string) =>
       apiFetch(`${endpoint}?id=${id}`, { method: "DELETE" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey });
+      addToast(successMsg || res?.message || "Deleted successfully!", "success");
+    },
+    onError: (err: any) => {
+      addToast(err?.message || "Failed to delete. Please try again.", "error");
+    },
   });
 }
+

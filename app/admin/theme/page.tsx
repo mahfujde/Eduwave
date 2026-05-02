@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Save, CheckCircle, Palette, RotateCcw, Eye } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
 
 interface ColorSetting {
   key: string;
@@ -74,6 +75,7 @@ export default function AdminThemePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const toast = useToast();
 
   // Fetch current color settings
   const fetchColors = useCallback(async () => {
@@ -122,10 +124,12 @@ export default function AdminThemePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ settings: settingsArray }),
       });
+      toast.success("Theme colors saved! Changes are now live.");
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to save theme colors.");
     }
     setSaving(false);
   };

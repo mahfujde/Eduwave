@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/rbac";
 
+// Ensure fresh data on every request
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const session = await auth();

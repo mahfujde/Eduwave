@@ -120,8 +120,8 @@ export default function AdminCommissionsPage() {
       formData.append("folder", "receipts");
       const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
       const d = await res.json();
-      if (d.url) {
-        setReceiptUrlInput(d.url);
+      if (d.success && d.data?.url) {
+        setReceiptUrlInput(d.data.url);
         showToast("Receipt uploaded successfully!", "success");
       }
     } catch {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Image as ImageIcon, Upload, Trash2, Copy, Check, Loader2, FileText, Film, FolderOpen } from "lucide-react";
 import DeleteModal from "@/components/admin/DeleteModal";
+import { useToast } from "@/hooks/useToast";
 
 const FOLDERS = ["general", "universities", "programs", "blog", "testimonials", "cms"];
 
@@ -17,6 +18,7 @@ export default function AdminMediaPage() {
   const [files, setFiles]     = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const toast = useToast();
   const [folder, setFolder]   = useState("general");
   const [filter, setFilter]   = useState("all");
   const [copied, setCopied]   = useState<string | null>(null);

@@ -13,6 +13,7 @@ const inquirySchema = z.object({
   whatsapp: z.string().optional(),
   university: z.string().optional(),
   program: z.string().optional(),
+  level: z.string().optional(),
   intake: z.string().optional(),
   message: z.string().min(5, "Please enter a message"),
 });
@@ -175,6 +176,23 @@ export default function InquiryForm({ universities }: Props) {
           />
         </div>
 
+        {/* Level of Interest */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Level of Interest
+          </label>
+          <select {...register("level")} className="input-field">
+            <option value="">Select level</option>
+            <option value="Certificate">Certificate</option>
+            <option value="Foundation / A-Level">Foundation / A-Level</option>
+            <option value="Diploma">Diploma</option>
+            <option value="Advance Diploma">Advance Diploma</option>
+            <option value="Bachelor Degree">Bachelor Degree</option>
+            <option value="Masters Degree">Masters Degree</option>
+            <option value="Doctoral Degree (PhD)">Doctoral Degree (PhD)</option>
+          </select>
+        </div>
+
         {/* Intake */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -182,12 +200,13 @@ export default function InquiryForm({ universities }: Props) {
           </label>
           <select {...register("intake")} className="input-field">
             <option value="">Select intake</option>
-            <option value="January 2025">January 2025</option>
-            <option value="March 2025">March 2025</option>
-            <option value="May 2025">May 2025</option>
-            <option value="July 2025">July 2025</option>
-            <option value="September 2025">September 2025</option>
-            <option value="January 2026">January 2026</option>
+            <option value="July 2026">July 2026</option>
+            <option value="September 2026">September 2026</option>
+            <option value="January 2027">January 2027</option>
+            <option value="March 2027">March 2027</option>
+            <option value="May 2027">May 2027</option>
+            <option value="July 2027">July 2027</option>
+            <option value="September 2027">September 2027</option>
             <option value="Not sure">Not sure / Need guidance</option>
           </select>
         </div>

@@ -54,7 +54,7 @@ export default function NotificationBar() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] flex flex-col">
+    <div className="sticky top-0 left-0 right-0 z-[100] flex flex-col">
       {visible.map((bar) => {
         const cfg  = TYPE_CONFIG[bar.type as keyof typeof TYPE_CONFIG] ?? TYPE_CONFIG.info;
         const Icon = cfg.icon;

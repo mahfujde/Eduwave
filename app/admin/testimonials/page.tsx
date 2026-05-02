@@ -49,6 +49,9 @@ export default function AdminTestimonialsPage() {
     setDeleteTarget(null);
   };
 
+  const [uploading, setUploading] = useState(false);
+  const photoValue = watch("photo");
+
   const handleUpload = async () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -56,12 +59,24 @@ export default function AdminTestimonialsPage() {
     input.onchange = async (e: any) => {
       const file = e.target.files[0];
       if (!file) return;
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "images/testimonials");
-      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
-      const result = await res.json();
-      if (result.success) setValue("photo", result.data.url);
+      setUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "images/testimonials");
+        const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+        const result = await res.json();
+        if (result.success) {
+          setValue("photo", result.data.url, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+        } else {
+          alert(result.message || "Upload failed");
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        alert("Upload failed. Please try again.");
+      } finally {
+        setUploading(false);
+      }
     };
     input.click();
   };
@@ -119,8 +134,18 @@ export default function AdminTestimonialsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
                 <div className="flex gap-2">
                   <input {...register("photo")} className="input-field flex-1" placeholder="/images/testimonials/..." />
-                  <button type="button" onClick={handleUpload} className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"><Upload size={16} /></button>
+                  <button type="button" onClick={handleUpload} disabled={uploading} className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 flex items-center gap-1">
+                    {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                  </button>
                 </div>
+                {photoValue && (
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 shrink-0">
+                      <Image src={photoValue} alt="Preview" width={56} height={56} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-xs text-green-600 font-medium">✓ Photo uploaded</span>
+                  </div>
+                )}
               </div>
 
               <div>

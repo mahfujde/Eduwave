@@ -99,7 +99,7 @@ export default function AdminUniversitiesPage() {
       formData.append("folder", "images/universities");
       const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
       const result = await res.json();
-      if (result.success) setValue(field, result.data.url);
+      if (result.success) setValue(field, result.data.url, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     };
     input.click();
   };
